@@ -106,7 +106,7 @@ public class JSqlBench {
         // time
         cmdOpts.addOption(Option.builder("t").longOpt("time")
                 .desc("Run the test for this many seconds")
-                .required(true).hasArg().argName("dop")
+                .required(true).hasArg().argName("seconds")
                 .build());
     }
 

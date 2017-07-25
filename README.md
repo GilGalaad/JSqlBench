@@ -25,6 +25,6 @@ usage: JSqlBench
                           [default 1]
  -T,--tablespace <tbsp>   Create tables in the specified tablespace,
                           rather than the default tablespace
- -t,--time <dop>          Run the test for this many seconds
+ -t,--time <seconds>      Run the test for this many seconds
  -U,--username <user>
  ```
