@@ -69,6 +69,13 @@ public class BenchEngine {
             waitAll(tRes);
             long endTime = System.nanoTime();
 
+            try {
+                cleanupDatabase();
+            } catch (SQLException ex) {
+                System.out.println("Error while cleaning up database: " + ex.getMessage());
+                System.exit(1);
+            }
+
             // calculating metrics
             System.out.println("*** BENCHMARK RESULTS ***");
             System.out.println("Scale factor: " + opts.getScale());
@@ -121,6 +128,12 @@ public class BenchEngine {
             str.populateTables(c);
             str.createIndexes(c);
             str.analyzeTables(c);
+        }
+    }
+
+    private void cleanupDatabase() throws SQLException {
+        try (Connection c = str.doConnect()) {
+            str.dropTables(c);
         }
     }
 

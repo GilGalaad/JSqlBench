@@ -6,6 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Locale;
 import static main.JSqlBench.opts;
 
 public class OracleStrategy extends DatabaseStrategy {
@@ -28,6 +29,7 @@ public class OracleStrategy extends DatabaseStrategy {
         System.out.print("Dropping tables...");
         String sql;
         String[] tables = new String[]{"bench_branches", "bench_tellers", "bench_accounts", "bench_history"};
+        long startTime = System.nanoTime();
         for (String tb : tables) {
             sql = "drop table " + (opts.getSchema() != null ? opts.getSchema() + "." + tb : tb) + " cascade constraints purge";
             //System.out.println(sql);
@@ -40,7 +42,8 @@ public class OracleStrategy extends DatabaseStrategy {
                 }
             }
         }
-        System.out.println("done!");
+        long endTime = System.nanoTime();
+        System.out.println("done! (" + String.format(Locale.ITALY, "%,d", (endTime - startTime) / 1000000L) + "ms)");
     }
 
     @Override
@@ -51,6 +54,7 @@ public class OracleStrategy extends DatabaseStrategy {
             "bench_tellers (tid number(38,0) not null, bid number(38,0), tbalance number(38,0))",
             "bench_accounts (aid number(38,0) not null, bid number(38,0), abalance number(38,0))",
             "bench_history (tid number(38,0), bid number(38,0), aid number(38,0), delta number(38,0), mtime timestamp(6))"};
+        long startTime = System.nanoTime();
         for (String tbd : tableDefs) {
             sql = "create table " + (opts.getSchema() != null ? opts.getSchema() + "." : "")
                     + tbd
@@ -61,7 +65,8 @@ public class OracleStrategy extends DatabaseStrategy {
                 stmt.execute(sql);
             }
         }
-        System.out.println("done!");
+        long endTime = System.nanoTime();
+        System.out.println("done! (" + String.format(Locale.ITALY, "%,d", (endTime - startTime) / 1000000L) + "ms)");
     }
 
     @Override
@@ -69,6 +74,7 @@ public class OracleStrategy extends DatabaseStrategy {
         System.out.print("Analyzing...");
         String sql;
         String[] tables = new String[]{"bench_branches", "bench_tellers", "bench_accounts", "bench_history"};
+        long startTime = System.nanoTime();
         for (String tb : tables) {
             sql = "begin dbms_stats.gather_table_stats(ownname => "
                     + (opts.getSchema() != null ? "'" + opts.getSchema().toUpperCase() + "', " : "user, ")
@@ -79,7 +85,8 @@ public class OracleStrategy extends DatabaseStrategy {
                 stmt.execute(sql);
             }
         }
-        System.out.println("done!");
+        long endTime = System.nanoTime();
+        System.out.println("done! (" + String.format(Locale.ITALY, "%,d", (endTime - startTime) / 1000000L) + "ms)");
     }
 
     @Override

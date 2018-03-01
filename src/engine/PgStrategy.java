@@ -6,6 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Locale;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -38,6 +39,8 @@ public class PgStrategy extends DatabaseStrategy {
         System.out.print("Dropping tables...");
         String sql;
         String[] tables = new String[]{"bench_branches", "bench_tellers", "bench_accounts", "bench_history"};
+        c.setAutoCommit(true);
+        long startTime = System.nanoTime();
         for (String tb : tables) {
             sql = "drop table if exists " + (opts.getSchema() != null ? opts.getSchema() + "." + tb : tb) + " cascade";
             //System.out.println(sql);
@@ -45,7 +48,9 @@ public class PgStrategy extends DatabaseStrategy {
                 stmt.execute(sql);
             }
         }
-        System.out.println("done!");
+        long endTime = System.nanoTime();
+        c.setAutoCommit(false);
+        System.out.println("done! (" + String.format(Locale.ITALY, "%,d", (endTime - startTime) / 1000000L) + "ms)");
     }
 
     @Override
@@ -56,6 +61,8 @@ public class PgStrategy extends DatabaseStrategy {
             "bench_tellers (tid bigint not null, bid bigint, tbalance bigint)",
             "bench_accounts (aid bigint not null, bid bigint, abalance bigint)",
             "bench_history (tid bigint, bid bigint, aid bigint, delta bigint, mtime timestamp(6))"};
+        c.setAutoCommit(true);
+        long startTime = System.nanoTime();
         for (String tbd : tableDefs) {
             sql = "create" + (opts.isNologging() ? " unlogged" : "") + " table " + (opts.getSchema() != null ? opts.getSchema() + "." : "")
                     + tbd
@@ -63,10 +70,11 @@ public class PgStrategy extends DatabaseStrategy {
             //System.out.println(sql);
             try (Statement stmt = c.createStatement()) {
                 stmt.execute(sql);
-                c.commit();
             }
         }
-        System.out.println("done!");
+        long endTime = System.nanoTime();
+        c.setAutoCommit(false);
+        System.out.println("done! (" + String.format(Locale.ITALY, "%,d", (endTime - startTime) / 1000000L) + "ms)");
     }
 
     @Override
@@ -75,6 +83,7 @@ public class PgStrategy extends DatabaseStrategy {
         String sql;
         String[] tables = new String[]{"bench_branches", "bench_tellers", "bench_accounts", "bench_history"};
         c.setAutoCommit(true);
+        long startTime = System.nanoTime();
         for (String tb : tables) {
             sql = "vacuum analyze " + tb;
             //System.out.println(sql);
@@ -82,8 +91,9 @@ public class PgStrategy extends DatabaseStrategy {
                 stmt.execute(sql);
             }
         }
+        long endTime = System.nanoTime();
         c.setAutoCommit(false);
-        System.out.println("done!");
+        System.out.println("done! (" + String.format(Locale.ITALY, "%,d", (endTime - startTime) / 1000000L) + "ms)");
     }
 
     @Override

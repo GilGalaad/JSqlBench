@@ -13,7 +13,7 @@ public class ProgressWorker implements Callable<BenchResult> {
     private final long deadline;
     private final ArrayList<Long> timings;
     private final Object lock;
-    private static final int PERIOD_SEC = 60;
+    private static final int INTERVAL_SEC = 60;
 
     public ProgressWorker(long deadline, ArrayList<Long> timings, Object lock) {
         this.deadline = deadline;
@@ -26,8 +26,8 @@ public class ProgressWorker implements Callable<BenchResult> {
         BenchResult ret = new BenchResult();
         ret.setStatus(OK);
         // entering loop
-        while (new Date().getTime() + (PERIOD_SEC * 1000) < deadline) {
-            Thread.sleep(PERIOD_SEC * 1000);
+        while (new Date().getTime() + (INTERVAL_SEC * 1000) < deadline) {
+            Thread.sleep(INTERVAL_SEC * 1000);
             // calculating partial stats
             long totTrans = 0;
             long rawTime = 0;
