@@ -29,18 +29,19 @@ public class ProgressWorker implements Callable<BenchResult> {
         while (new Date().getTime() + (INTERVAL_SEC * 1000) < deadline) {
             Thread.sleep(INTERVAL_SEC * 1000);
             // calculating partial stats
-            long totTrans = 0;
-            long rawTime = 0;
+            long totTrans, rawTime;
+            double rawTps, avgLatency, stdDev;
             synchronized (lock) {
-                totTrans += timings.size();
-                for (Long t : timings) {
-                    rawTime += t;
-                }
+                totTrans = timings.size();
+                rawTime = timings.stream().mapToLong(i -> i).sum();
+                rawTps = (double) totTrans * 1_000_000_000.0d / ((double) rawTime / (double) opts.getConcurrency());
+                avgLatency = (double) rawTime / 1_000_000.0d / (double) totTrans;
+                stdDev = Math.sqrt((timings.stream().mapToDouble(i -> ((double) i) - avgLatency).map(i -> i * i).sum()) / ((double) totTrans)) / 1_000_000.0d;
             }
-            double rawTps = (double) totTrans * (double) 1000000000 / ((double) rawTime / (double) opts.getConcurrency());
-            double avgLatency = (double) rawTime / (double) 1000000 / (double) totTrans;
-            System.out.println("Partial results: " + BigDecimal.valueOf(rawTps).setScale(3, RoundingMode.HALF_UP) + " tps, "
-                    + BigDecimal.valueOf(avgLatency).setScale(3, RoundingMode.HALF_UP) + " ms latency");
+            System.out.println("Partial results: "
+                    + BigDecimal.valueOf(rawTps).setScale(3, RoundingMode.HALF_UP) + " tps, "
+                    + BigDecimal.valueOf(avgLatency).setScale(3, RoundingMode.HALF_UP) + " ms latency, "
+                    + BigDecimal.valueOf(stdDev).setScale(3, RoundingMode.HALF_UP) + " stddev");
         }
         return ret;
     }

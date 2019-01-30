@@ -81,30 +81,28 @@ public class BenchEngine {
             System.out.println("Scale factor: " + opts.getScale());
             System.out.println("Number of concurrent clients: " + opts.getConcurrency());
             long totTime = endTime - startTime;
-            System.out.println("Total time elapsed: " + (totTime / 1000000000L) + " seconds");
+            System.out.println("Total time elapsed: " + (totTime / 1_000_000_000L) + " seconds");
             for (Future<BenchResult> f : tRes) {
                 if (f.get().getStatus() == KO) {
                     System.out.println("Thead reported exception: " + f.get().getEx().getMessage());
                 }
             }
-            long totTrans = 0;
-            long rawTime = 0;
-            totTrans += timings.size();
-            for (Long t : timings) {
-                rawTime += t;
-            }
+            long totTrans = timings.size();
+            long rawTime = timings.stream().mapToLong(i -> i).sum();
             if (totTrans != 0) {
                 System.out.println("Total number of transactions processed: " + totTrans);
             } else {
                 System.out.println("No transaction processed, no result to show");
                 System.exit(1);
             }
-            double totTps = (double) totTrans * (double) 1000000000 / (double) totTime;
+            double totTps = (double) totTrans * 1_000_000_000.0d / (double) totTime;
             System.out.println("Transactions per second: " + BigDecimal.valueOf(totTps).setScale(3, RoundingMode.HALF_UP) + " (including connection and client overhead)");
-            double rawTps = (double) totTrans * (double) 1000000000 / ((double) rawTime / (double) opts.getConcurrency());
+            double rawTps = (double) totTrans * 1_000_000_000.0d / ((double) rawTime / (double) opts.getConcurrency());
             System.out.println("Transactions per second: " + BigDecimal.valueOf(rawTps).setScale(3, RoundingMode.HALF_UP) + " (excluding connection and client overhead)");
-            double avgLatency = (double) rawTime / (double) 1000000 / (double) totTrans;
+            double avgLatency = (double) rawTime / 1_000_000.0d / (double) totTrans;
             System.out.println("Average latency: " + BigDecimal.valueOf(avgLatency).setScale(3, RoundingMode.HALF_UP) + " ms");
+            double stdDev = Math.sqrt((timings.stream().mapToDouble(x -> ((double) x) - avgLatency).map(x -> x * x).sum()) / ((double) totTrans)) / 1_000_000.0d;
+            System.out.println("Latency stddev: " + BigDecimal.valueOf(stdDev).setScale(3, RoundingMode.HALF_UP) + " ms");
         } catch (InterruptedException | ExecutionException ex) {
             // should never happen
             System.out.println(ex.getMessage());
