@@ -1,7 +1,7 @@
 # JSqlBench
 Simple Java program for running benchmarks on RDBMS.
 
-Inspired by [pg_bench](https://www.postgresql.org/docs/devel/static/pgbench.html), this software emulates a simple OLTP workload and measures TPS (transactions per second) and average latency. Currently supported RDBMS are Oracle and PostgreSQL, but the _Strategy_ design pattern used makes it easy to cover other engines.
+Inspired by [pg_bench](https://www.postgresql.org/docs/devel/static/pgbench.html), this software emulates a simple OLTP workload and measures TPS (transactions per second), average latency and standard deviation. Currently supported RDBMS are Oracle and PostgreSQL, but the _Strategy_ design pattern used makes it easy to cover other engines.
 
 #### Usage
 ```
