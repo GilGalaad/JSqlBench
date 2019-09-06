@@ -56,7 +56,7 @@ public abstract class DatabaseStrategy {
             }
         }
         long endTime = System.nanoTime();
-        System.out.println("done! (" + String.format(Locale.ITALY, "%,d", (endTime - startTime) / 1000000L) + "ms)");
+        System.out.println("done! (" + String.format(Locale.ITALY, "%,d", (endTime - startTime) / 1_000_000L) + "ms)");
     }
 
     public void createIndexes(Connection c) throws SQLException {
@@ -75,7 +75,7 @@ public abstract class DatabaseStrategy {
         }
         long endTime = System.nanoTime();
         c.setAutoCommit(false);
-        System.out.println("done! (" + String.format(Locale.ITALY, "%,d", (endTime - startTime) / 1000000L) + "ms)");
+        System.out.println("done! (" + String.format(Locale.ITALY, "%,d", (endTime - startTime) / 1_000_000L) + "ms)");
     }
 
     public abstract void analyzeTables(Connection c) throws SQLException;
