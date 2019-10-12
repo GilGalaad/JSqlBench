@@ -9,7 +9,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
 import java.util.List;
+import lombok.extern.log4j.Log4j2;
 
+@Log4j2
 public abstract class DatabaseStrategy {
 
     protected static final List<String> tables = Arrays.asList(new String[]{"bench_branches", "bench_tellers", "bench_accounts", "bench_history"});
@@ -41,7 +43,7 @@ public abstract class DatabaseStrategy {
     public abstract void createTables(Connection c) throws SQLException;
 
     public void populateTables(Connection c) throws SQLException {
-        System.out.print("Populating tables...");
+        log.info("Populating tables...");
         long startTime = System.nanoTime();
         String sql = String.format(INSERT_BRANCHES_STMT, getSchemaPrefix());
         try (PreparedStatement stmt = c.prepareStatement(sql)) {
@@ -75,17 +77,17 @@ public abstract class DatabaseStrategy {
                     stmt.setLong(3, 0);
                     stmt.addBatch();
                 }
-                System.out.print((i + 1) + "...");
+                log.info("{}...", i + 1);
                 stmt.executeBatch();
                 c.commit();
             }
         }
         long endTime = System.nanoTime();
-        System.out.println("done! (" + smartElapsed(endTime - startTime) + ")");
+        log.info("done! ({})\n", smartElapsed(endTime - startTime));
     }
 
     public void createIndexes(Connection c) throws SQLException {
-        System.out.print("Creating indexes...");
+        log.info("Creating indexes...");
         c.setAutoCommit(true);
         long startTime = System.nanoTime();
         String sql = String.format(IDX_BRANCHES_STMT, getSchemaPrefix(), getTablespaceClause()).trim();
@@ -102,7 +104,7 @@ public abstract class DatabaseStrategy {
         }
         long endTime = System.nanoTime();
         c.setAutoCommit(false);
-        System.out.println("done! (" + smartElapsed(endTime - startTime) + ")");
+        log.info("done! ({})\n", smartElapsed(endTime - startTime));
     }
 
     public abstract void analyzeTables(Connection c) throws SQLException;

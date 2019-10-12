@@ -8,7 +8,9 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
+import lombok.extern.log4j.Log4j2;
 
+@Log4j2
 public class OracleStrategy extends DatabaseStrategy {
 
     private static final String JDBC_URL_TEMPLATE = "jdbc:oracle:thin:@//%s:%d/%s";
@@ -41,7 +43,7 @@ public class OracleStrategy extends DatabaseStrategy {
 
     @Override
     public void dropTables(Connection c) throws SQLException {
-        System.out.print("Dropping tables...");
+        log.info("Dropping tables...");
         c.setAutoCommit(true);
         long startTime = System.nanoTime();
         for (String table : tables) {
@@ -57,12 +59,12 @@ public class OracleStrategy extends DatabaseStrategy {
         }
         long endTime = System.nanoTime();
         c.setAutoCommit(false);
-        System.out.println("done! (" + smartElapsed(endTime - startTime) + ")");
+        log.info("done! ({})\n", smartElapsed(endTime - startTime));
     }
 
     @Override
     public void createTables(Connection c) throws SQLException {
-        System.out.print("Creating tables...");
+        log.info("Creating tables...");
         c.setAutoCommit(true);
         long startTime = System.nanoTime();
         String sql = String.format(CREATE_BRANCHES_STMT, getSchemaPrefix(), getNologgingClause(), getTablespaceClause()).trim();
@@ -83,12 +85,12 @@ public class OracleStrategy extends DatabaseStrategy {
         }
         long endTime = System.nanoTime();
         c.setAutoCommit(false);
-        System.out.println("done! (" + smartElapsed(endTime - startTime) + ")");
+        log.info("done! ({})\n", smartElapsed(endTime - startTime));
     }
 
     @Override
     public void analyzeTables(Connection c) throws SQLException {
-        System.out.print("Analyzing...");
+        log.info("Analyzing...");
         c.setAutoCommit(true);
         long startTime = System.nanoTime();
         for (String table : tables) {
@@ -99,7 +101,7 @@ public class OracleStrategy extends DatabaseStrategy {
         }
         long endTime = System.nanoTime();
         c.setAutoCommit(false);
-        System.out.println("done! (" + smartElapsed(endTime - startTime) + ")");
+        log.info("done! ({})\n", smartElapsed(endTime - startTime));
     }
 
     @Override

@@ -6,9 +6,11 @@ import engine.dto.BenchConf.DbEngine;
 import static engine.dto.BenchConf.DbEngine.ORACLE;
 import static engine.dto.BenchConf.DbEngine.POSTGRES;
 import java.util.concurrent.Callable;
+import lombok.extern.log4j.Log4j2;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
+@Log4j2
 @Command(name = "JSqlBench",
         sortOptions = false, abbreviateSynopsis = true,
         usageHelpAutoWidth = true)
@@ -89,7 +91,7 @@ public class JSqlBenchCommand implements Callable<Integer> {
             BenchEngine eng = new BenchEngine(conf);
             eng.run();
         } catch (Exception ex) {
-            System.out.println(ex.getMessage());
+            log.error(ex.getMessage());
             return 1;
         }
 

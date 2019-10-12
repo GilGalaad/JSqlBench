@@ -20,7 +20,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import lombok.extern.log4j.Log4j2;
 
+@Log4j2
 public class BenchEngine {
 
     private final BenchConf conf;
@@ -44,7 +46,7 @@ public class BenchEngine {
     }
 
     public void run() {
-        System.out.println("*** PREPARING FOR BENCHMARK ***");
+        log.info("*** PREPARING FOR BENCHMARK ***");
         try {
             prepareDatabase();
         } catch (SQLException ex) {
@@ -53,9 +55,10 @@ public class BenchEngine {
 
         try {
             // let settle down a bit
+            log.info("Settling down for 5 seconds...");
             Thread.sleep(5000);
             // preparing threads
-            System.out.println("Starting " + conf.getConcurrency() + " concurrent threads...");
+            log.info("Starting {} concurrent threads...", conf.getConcurrency());
             ExecutorService tPool = Executors.newFixedThreadPool(conf.getConcurrency() + 1);
             ArrayList<Callable<BenchResult>> tList = new ArrayList<>(conf.getConcurrency() + 1);
             List<Future<BenchResult>> tRes = null;
@@ -82,35 +85,35 @@ public class BenchEngine {
             }
 
             // calculating metrics
-            System.out.println("*** BENCHMARK RESULTS ***");
-            System.out.println("Scale factor: " + conf.getScale());
-            System.out.println("Number of concurrent clients: " + conf.getConcurrency());
+            log.info("*** BENCHMARK RESULTS ***");
+            log.info("Scale factor: {}", conf.getScale());
+            log.info("Number of concurrent clients: {}", conf.getConcurrency());
             long elapsedNano = endTime - startTime;
-            System.out.println("Total time elapsed: " + smartElapsed(elapsedNano));
+            log.info("Total time elapsed: {}", smartElapsed(elapsedNano));
             for (Future<BenchResult> f : tRes) {
                 if (f.get().getStatus() == KO) {
-                    System.out.println("Thead reported exception: " + f.get().getEx().getMessage());
+                    log.error("Thead reported exception: {}", f.get().getEx().getMessage());
                 }
             }
             long totTrans = timings.size();
             long rawTime = timings.stream().mapToLong(i -> i).sum();
             if (totTrans != 0) {
-                System.out.println("Total number of transactions processed: " + totTrans);
+                log.info("Total number of transactions processed: {}", totTrans);
             } else {
-                System.out.println("No transaction processed, no result to show");
+                log.info("No transaction processed, no result to show");
                 return;
             }
             double totTps = (double) totTrans * 1_000_000_000.0d / (double) elapsedNano;
-            System.out.println("Transactions per second: " + BigDecimal.valueOf(totTps).setScale(3, RoundingMode.HALF_UP) + " (including connection and client overhead)");
+            log.info("Transactions per second: {} (including connection and client overhead)", BigDecimal.valueOf(totTps).setScale(3, RoundingMode.HALF_UP));
             double rawTps = (double) totTrans * 1_000_000_000.0d / ((double) rawTime / (double) conf.getConcurrency());
-            System.out.println("Transactions per second: " + BigDecimal.valueOf(rawTps).setScale(3, RoundingMode.HALF_UP) + " (excluding connection and client overhead)");
+            log.info("Transactions per second: {} (excluding connection and client overhead)", BigDecimal.valueOf(rawTps).setScale(3, RoundingMode.HALF_UP));
             double avgLatency = (double) rawTime / 1_000_000.0d / (double) totTrans;
-            System.out.println("Average latency: " + BigDecimal.valueOf(avgLatency).setScale(3, RoundingMode.HALF_UP) + " ms");
+            log.info("Average latency: {} ms", BigDecimal.valueOf(avgLatency).setScale(3, RoundingMode.HALF_UP));
             double stdDev = Math.sqrt((timings.stream().mapToDouble(x -> ((double) x) - avgLatency).map(x -> x * x).sum()) / ((double) totTrans)) / 1_000_000.0d;
-            System.out.println("Latency stddev: " + BigDecimal.valueOf(stdDev).setScale(3, RoundingMode.HALF_UP) + " ms");
+            log.info("Latency stddev: {}  ms", BigDecimal.valueOf(stdDev).setScale(3, RoundingMode.HALF_UP));
         } catch (InterruptedException | ExecutionException ex) {
             // should never happen
-            System.out.println("Unexpected " + ex.getClass().getSimpleName() + ": " + ex.getMessage());
+            log.error("Unexpected {}: {}", ex.getClass().getSimpleName(), ex.getMessage());
         }
     }
 

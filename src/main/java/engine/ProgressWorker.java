@@ -7,7 +7,9 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.Callable;
+import lombok.extern.log4j.Log4j2;
 
+@Log4j2
 public class ProgressWorker implements Callable<BenchResult> {
 
     private static final int INTERVAL_SEC = 60;
@@ -41,10 +43,10 @@ public class ProgressWorker implements Callable<BenchResult> {
                 avgLatency = (double) rawTime / 1_000_000.0d / (double) totTrans;
                 stdDev = Math.sqrt((timings.stream().mapToDouble(i -> ((double) i) - avgLatency).map(i -> i * i).sum()) / ((double) totTrans)) / 1_000_000.0d;
             }
-            System.out.println("Partial results: "
-                    + BigDecimal.valueOf(rawTps).setScale(3, RoundingMode.HALF_UP) + " tps, "
-                    + BigDecimal.valueOf(avgLatency).setScale(3, RoundingMode.HALF_UP) + " ms latency, "
-                    + BigDecimal.valueOf(stdDev).setScale(3, RoundingMode.HALF_UP) + " stddev");
+            log.info("Partial results: {} tps, {} ms latency, {} stddev",
+                    BigDecimal.valueOf(rawTps).setScale(3, RoundingMode.HALF_UP),
+                    BigDecimal.valueOf(avgLatency).setScale(3, RoundingMode.HALF_UP),
+                    BigDecimal.valueOf(stdDev).setScale(3, RoundingMode.HALF_UP));
         }
         return ret;
     }
