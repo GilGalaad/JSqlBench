@@ -25,6 +25,6 @@ DROP TABLE IF EXISTS bench_history CASCADE;
 CREATE UNLOGGED TABLE bench_history (tid INTEGER NOT NULL, bid INTEGER NOT NULL, aid INTEGER NOT NULL, delta INTEGER, mtime TIMESTAMP(6)) TABLESPACE tblspace;
 
 -- indexes
-CREATE UNIQUE INDEX pk_bench_branches ON bench_branches (bid) TABLESPACE tblspace;
-CREATE UNIQUE INDEX pk_bench_tellers ON bench_tellers (tid) TABLESPACE tblspace;
-CREATE UNIQUE INDEX pk_bench_accounts ON bench_accounts (aid) TABLESPACE tblspace;
+CREATE UNIQUE INDEX bench_branches_pk ON bench_branches (bid) TABLESPACE tblspace;
+CREATE UNIQUE INDEX bench_tellers_pk ON bench_tellers (tid) TABLESPACE tblspace;
+CREATE UNIQUE INDEX bench_accounts_pk ON bench_accounts (aid) TABLESPACE tblspace;
