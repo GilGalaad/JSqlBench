@@ -5,6 +5,7 @@ Inspired by [pg_bench](https://www.postgresql.org/docs/devel/static/pgbench.html
 
 #### Usage
 ```
+$ java -jar JSqlBench.jar --help
 Usage: JSqlBench [OPTIONS]
       --engine=<engine>   Database engine. Currently supported: ORACLE, POSTGRES
       --host=<host>       Database server's hostname (default: localhost)
