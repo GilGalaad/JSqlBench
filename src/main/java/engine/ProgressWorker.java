@@ -1,7 +1,9 @@
 package engine;
 
-import static engine.BenchResult.ExecStatus.OK;
 import engine.dto.BenchConf;
+import engine.dto.BenchResult;
+import static engine.dto.BenchResult.ExecStatus.OK;
+import engine.utils.MetricProvider;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -16,10 +18,10 @@ public class ProgressWorker implements Callable<BenchResult> {
 
     private final BenchConf conf;
     private final long deadline;
-    private final ArrayList<Long> timings;
+    private final ArrayList<Double> timings;
     private final Object lock;
 
-    public ProgressWorker(BenchConf conf, long deadline, ArrayList<Long> timings, Object lock) {
+    public ProgressWorker(BenchConf conf, long deadline, ArrayList<Double> timings, Object lock) {
         this.conf = conf;
         this.deadline = deadline;
         this.timings = timings;
@@ -34,15 +36,15 @@ public class ProgressWorker implements Callable<BenchResult> {
         while (new Date().getTime() + (INTERVAL_SEC * 1000) < deadline) {
             Thread.sleep(INTERVAL_SEC * 1000);
             // calculating partial stats
-            long totTrans, rawTime;
-            double rawTps, avgLatency, stdDev;
+            MetricProvider mp;
             synchronized (lock) {
-                totTrans = timings.size();
-                rawTime = timings.stream().mapToLong(i -> i).sum();
-                rawTps = (double) totTrans * 1_000_000_000.0d / ((double) rawTime / (double) conf.getConcurrency());
-                avgLatency = (double) rawTime / 1_000_000.0d / (double) totTrans;
-                stdDev = Math.sqrt((timings.stream().mapToDouble(i -> ((double) i) - avgLatency).map(i -> i * i).sum()) / ((double) totTrans)) / 1_000_000.0d;
+                mp = new MetricProvider(timings);
             }
+            int totTrans = mp.getCount();
+            double rawTime = mp.getSum();
+            double rawTps = (double) totTrans / (rawTime / 1_000d / (double) conf.getConcurrency());
+            double avgLatency = mp.getMean();
+            double stdDev = totTrans > 1 ? mp.getStddev() : 0d;
             log.info("Partial results: {} tps, {} ms latency, {} stddev",
                     BigDecimal.valueOf(rawTps).setScale(3, RoundingMode.HALF_UP),
                     BigDecimal.valueOf(avgLatency).setScale(3, RoundingMode.HALF_UP),

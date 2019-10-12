@@ -1,8 +1,9 @@
 package engine;
 
-import static engine.BenchResult.ExecStatus.KO;
-import static engine.BenchResult.ExecStatus.OK;
 import engine.dto.BenchConf;
+import engine.dto.BenchResult;
+import static engine.dto.BenchResult.ExecStatus.KO;
+import static engine.dto.BenchResult.ExecStatus.OK;
 import engine.strategy.DatabaseStrategy;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -16,10 +17,10 @@ public class DatabaseWorker implements Callable<BenchResult> {
     private final BenchConf conf;
     private final DatabaseStrategy str;
     private final long deadline;
-    private final ArrayList<Long> timings;
+    private final ArrayList<Double> timings;
     private final Object lock;
 
-    public DatabaseWorker(BenchConf conf, DatabaseStrategy str, long deadline, ArrayList<Long> timings, Object lock) {
+    public DatabaseWorker(BenchConf conf, DatabaseStrategy str, long deadline, ArrayList<Double> timings, Object lock) {
         this.conf = conf;
         this.str = str;
         this.deadline = deadline;
@@ -43,7 +44,8 @@ public class DatabaseWorker implements Callable<BenchResult> {
                 str.runWriteTransaction(c, bid, tid, aid, delta);
                 long endTime = System.nanoTime();
                 synchronized (lock) {
-                    timings.add(endTime - startTime);
+                    double elapsedMs = ((double) (endTime - startTime)) / 1_000_000d;
+                    timings.add(elapsedMs);
                 }
             }
         } catch (SQLException | RuntimeException ex) {

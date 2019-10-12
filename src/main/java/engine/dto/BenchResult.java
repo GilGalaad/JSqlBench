@@ -1,4 +1,4 @@
-package engine;
+package engine.dto;
 
 import lombok.Data;
 

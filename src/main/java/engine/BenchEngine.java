@@ -1,13 +1,15 @@
 package engine;
 
-import static engine.BenchResult.ExecStatus.KO;
-import static engine.CommonUtils.smartElapsed;
 import engine.dto.BenchConf;
 import static engine.dto.BenchConf.DbEngine.ORACLE;
 import static engine.dto.BenchConf.DbEngine.POSTGRES;
+import engine.dto.BenchResult;
+import static engine.dto.BenchResult.ExecStatus.KO;
 import engine.strategy.DatabaseStrategy;
 import engine.strategy.OracleStrategy;
 import engine.strategy.PostgresStrategy;
+import static engine.utils.CommonUtils.smartElapsed;
+import engine.utils.MetricProvider;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.Connection;
@@ -27,7 +29,7 @@ public class BenchEngine {
 
     private final BenchConf conf;
     private final DatabaseStrategy str;
-    private final ArrayList<Long> timings = new ArrayList<>();
+    private final ArrayList<Double> timings = new ArrayList<>();
     private final Object lock = new Object();
 
     public BenchEngine(BenchConf conf) throws UnsupportedOperationException {
@@ -84,32 +86,42 @@ public class BenchEngine {
                 throw new RuntimeException("Error while cleaning up database: " + ex.getMessage(), ex);
             }
 
-            // calculating metrics
-            log.info("*** BENCHMARK RESULTS ***");
+            // printing result
+            log.info("*** BENCHMARK RESULT ***");
             log.info("Scale factor: {}", conf.getScale());
             log.info("Number of concurrent clients: {}", conf.getConcurrency());
+
             long elapsedNano = endTime - startTime;
+            double elapsedSec = ((double) (endTime - startTime)) / 1_000_000_000d;
             log.info("Total time elapsed: {}", smartElapsed(elapsedNano));
+
             for (Future<BenchResult> f : tRes) {
                 if (f.get().getStatus() == KO) {
                     log.error("Thead reported exception: {}", f.get().getEx().getMessage());
                 }
             }
-            long totTrans = timings.size();
-            long rawTime = timings.stream().mapToLong(i -> i).sum();
-            if (totTrans != 0) {
-                log.info("Total number of transactions processed: {}", totTrans);
-            } else {
+
+            // calculating metrics
+            MetricProvider mp = new MetricProvider(timings);
+
+            int totTrans = mp.getCount();
+            if (totTrans == 0) {
                 log.info("No transaction processed, no result to show");
                 return;
             }
-            double totTps = (double) totTrans * 1_000_000_000.0d / (double) elapsedNano;
+            log.info("Total number of transactions processed: {}", totTrans);
+            double rawTime = mp.getSum();
+
+            double totTps = (double) totTrans / elapsedSec;
             log.info("Transactions per second: {} (including connection and client overhead)", BigDecimal.valueOf(totTps).setScale(3, RoundingMode.HALF_UP));
-            double rawTps = (double) totTrans * 1_000_000_000.0d / ((double) rawTime / (double) conf.getConcurrency());
+
+            double rawTps = (double) totTrans / (rawTime / 1_000d / (double) conf.getConcurrency());
             log.info("Transactions per second: {} (excluding connection and client overhead)", BigDecimal.valueOf(rawTps).setScale(3, RoundingMode.HALF_UP));
-            double avgLatency = (double) rawTime / 1_000_000.0d / (double) totTrans;
+
+            double avgLatency = mp.getMean();
             log.info("Average latency: {} ms", BigDecimal.valueOf(avgLatency).setScale(3, RoundingMode.HALF_UP));
-            double stdDev = Math.sqrt((timings.stream().mapToDouble(x -> ((double) x) - avgLatency).map(x -> x * x).sum()) / ((double) totTrans)) / 1_000_000.0d;
+
+            double stdDev = totTrans > 1 ? mp.getStddev() : 0d;
             log.info("Latency stddev: {}  ms", BigDecimal.valueOf(stdDev).setScale(3, RoundingMode.HALF_UP));
         } catch (InterruptedException | ExecutionException ex) {
             // should never happen

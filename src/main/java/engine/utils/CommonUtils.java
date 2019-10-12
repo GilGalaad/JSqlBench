@@ -1,13 +1,10 @@
-package engine;
+package engine.utils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.concurrent.TimeUnit;
 
 public class CommonUtils {
-
-    private CommonUtils() {
-    }
 
     public static String smartElapsed(long elapsedNano) {
         if (elapsedNano < TimeUnit.MICROSECONDS.toNanos(1)) {

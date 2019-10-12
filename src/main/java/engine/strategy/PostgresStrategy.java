@@ -1,6 +1,6 @@
 package engine.strategy;
 
-import static engine.CommonUtils.smartElapsed;
+import static engine.utils.CommonUtils.smartElapsed;
 import engine.dto.BenchConf;
 import java.sql.Connection;
 import java.sql.DriverManager;
