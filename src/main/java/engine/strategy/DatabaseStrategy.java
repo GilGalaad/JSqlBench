@@ -1,7 +1,7 @@
 package engine.strategy;
 
-import static engine.utils.CommonUtils.smartElapsed;
 import engine.dto.BenchConf;
+import static engine.utils.CommonUtils.smartElapsed;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -25,10 +25,14 @@ public abstract class DatabaseStrategy {
     protected static final String IDX_ACCOUNTS_STMT = "CREATE UNIQUE INDEX bench_accounts_pk ON %sbench_accounts (aid) %s";
 
     protected static final String UPDATE_ACCOUNTS_STMT = "UPDATE %sbench_accounts SET abalance = abalance + ? WHERE aid = ?";
-    protected static final String SELECT_ACCOUNTS_STMT = "SELECT abalance FROM %sbench_accounts WHERE aid = ?";
+    protected static final String SELECT_ABALANCE_ACCOUNTS_STMT = "SELECT abalance FROM %sbench_accounts WHERE aid = ?";
     protected static final String UPDATE_TELLERS_STMT = "UPDATE %sbench_tellers SET tbalance = tbalance + ? WHERE tid = ?";
     protected static final String UPDATE_BRANCHES_STMT = "UPDATE %sbench_branches SET bbalance = bbalance + ? WHERE bid = ?";
     protected static final String INSERT_HISTORY_STMT = "INSERT INTO %sbench_history (tid, bid, aid, delta, mtime) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)";
+
+    protected static final String SELECT_BRANCHES_STMT = "SELECT * FROM %sbench_branches WHERE bid = ?";
+    protected static final String SELECT_TELLERS_STMT = "SELECT * FROM %sbench_tellers WHERE tid = ?";
+    protected static final String SELECT_ACCOUNTS_STMT = "SELECT * FROM %sbench_accounts WHERE aid = ?";
 
     protected final BenchConf conf;
 
@@ -115,11 +119,11 @@ public abstract class DatabaseStrategy {
             stmt.setLong(2, aid);
             stmt.executeUpdate();
         }
-        try (PreparedStatement stmt = c.prepareStatement(String.format(SELECT_ACCOUNTS_STMT, getSchemaPrefix()))) {
+        try (PreparedStatement stmt = c.prepareStatement(String.format(SELECT_ABALANCE_ACCOUNTS_STMT, getSchemaPrefix()))) {
             stmt.setLong(1, aid);
             try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    rs.getInt(1);
+                while (rs.next()) {
+                    //rs.getLong(1);
                 }
             }
         }
@@ -141,6 +145,33 @@ public abstract class DatabaseStrategy {
             stmt.executeUpdate();
         }
         c.commit();
+    }
+
+    public void runReadOnlyTransaction(Connection c, long bid, long tid, long aid) throws SQLException {
+        try (PreparedStatement stmt = c.prepareStatement(String.format(SELECT_BRANCHES_STMT, getSchemaPrefix()))) {
+            stmt.setLong(1, bid);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    //rs.getLong(1);
+                }
+            }
+        }
+        try (PreparedStatement stmt = c.prepareStatement(String.format(SELECT_TELLERS_STMT, getSchemaPrefix()))) {
+            stmt.setLong(1, tid);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    //rs.getLong(1);
+                }
+            }
+        }
+        try (PreparedStatement stmt = c.prepareStatement(String.format(SELECT_ACCOUNTS_STMT, getSchemaPrefix()))) {
+            stmt.setLong(1, aid);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    //rs.getLong(1);
+                }
+            }
+        }
     }
 
     public String getSchemaPrefix() {

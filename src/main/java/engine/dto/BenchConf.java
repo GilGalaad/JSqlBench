@@ -18,9 +18,10 @@ public class BenchConf {
     private String password;
     private String schema;
     private String tablespace;
-    private boolean nologging = false;
+    private boolean nologging;
     private int scale = 1;
     private int concurrency = 1;
     private int time;
+    private boolean readOnly;
 
 }

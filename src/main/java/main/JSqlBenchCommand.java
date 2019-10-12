@@ -16,13 +16,13 @@ import picocli.CommandLine.Option;
         usageHelpAutoWidth = true)
 public class JSqlBenchCommand implements Callable<Integer> {
 
-    @Option(names = "--engine", required = true, description = "Database engine. Currently supported: ${COMPLETION-CANDIDATES}")
+    @Option(names = "--engine", required = true, description = "Database engine. Currently supported: Oracle and Postgres")
     private DbEngine engine;
 
     @Option(names = "--host", required = false, defaultValue = "localhost", description = "Database server's hostname (default: ${DEFAULT-VALUE})")
     private String host;
 
-    @Option(names = "--port", required = false, description = "Database server's port (default: 1521 for ORACLE and 5432 for POSTGRES)")
+    @Option(names = "--port", required = false, description = "Database server's port (default: 1521 for Oracle and 5432 for Postgres)")
     private Integer port;
 
     @Option(names = "--dbname", required = true, description = "Database or instance name (SID)")
@@ -40,7 +40,7 @@ public class JSqlBenchCommand implements Callable<Integer> {
     @Option(names = "--tablespace", required = false, description = "Create objects in the specified tablespace, rather than the default one")
     private String tablespace;
 
-    @Option(names = "--nologging", required = false, description = "Create tables in nologging mode")
+    @Option(names = "--nologging", required = false, defaultValue = "false", description = "Create tables in nologging mode")
     private boolean nologging;
 
     @Option(names = "--scale", required = false, defaultValue = "1",
@@ -57,6 +57,9 @@ public class JSqlBenchCommand implements Callable<Integer> {
             + "it is a good practice to make the run last at least a few minutes. "
             + "In some cases you could need hours to get numbers that are reproducible (default: ${DEFAULT-VALUE})")
     private Integer time;
+
+    @Option(names = "--read-only", required = false, defaultValue = "false", description = "Simulate a read only worlkoad")
+    private boolean readOnly;
 
     @Option(names = "--help", usageHelp = true, description = "Print this help and exit")
     private boolean help;
@@ -86,6 +89,7 @@ public class JSqlBenchCommand implements Callable<Integer> {
         conf.setScale(scale);
         conf.setConcurrency(concurrency);
         conf.setTime(time);
+        conf.setReadOnly(readOnly);
 
         try {
             BenchEngine eng = new BenchEngine(conf);

@@ -41,7 +41,11 @@ public class DatabaseWorker implements Callable<BenchResult> {
                 long aid = ThreadLocalRandom.current().nextLong(1, conf.getScale() * 100000 + 1);
                 int delta = ThreadLocalRandom.current().nextInt(-5000, 5001);
                 long startTime = System.nanoTime();
-                str.runWriteTransaction(c, bid, tid, aid, delta);
+                if (conf.isReadOnly()) {
+                    str.runReadOnlyTransaction(c, bid, tid, aid);
+                } else {
+                    str.runWriteTransaction(c, bid, tid, aid, delta);
+                }
                 long endTime = System.nanoTime();
                 synchronized (lock) {
                     double elapsedMs = ((double) (endTime - startTime)) / 1_000_000d;
