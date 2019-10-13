@@ -47,8 +47,8 @@ public class DatabaseWorker implements Callable<BenchResult> {
                     str.runWriteTransaction(c, bid, tid, aid, delta);
                 }
                 long endTime = System.nanoTime();
+                double elapsedMs = ((double) (endTime - startTime)) / 1_000_000d;
                 synchronized (lock) {
-                    double elapsedMs = ((double) (endTime - startTime)) / 1_000_000d;
                     timings.add(elapsedMs);
                 }
             }

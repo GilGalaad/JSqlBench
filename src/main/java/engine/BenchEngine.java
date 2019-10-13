@@ -121,7 +121,7 @@ public class BenchEngine {
             double avgLatency = mp.getMean();
             log.info("Average latency: {} ms", BigDecimal.valueOf(avgLatency).setScale(3, RoundingMode.HALF_UP));
 
-            double stdDev = totTrans > 1 ? mp.getStddev() : 0d;
+            double stdDev = mp.getStddev();
             log.info("Latency stddev: {}  ms", BigDecimal.valueOf(stdDev).setScale(3, RoundingMode.HALF_UP));
         } catch (InterruptedException | ExecutionException ex) {
             // should never happen

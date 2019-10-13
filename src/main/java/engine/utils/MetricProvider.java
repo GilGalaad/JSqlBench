@@ -20,31 +20,32 @@ public class MetricProvider {
 
     public MetricProvider(ArrayList<Double> timings) {
         this.timings = timings;
-        this.count = timings.size();
-        this.sum = calcSum();
-        this.mean = calcMean();
-        this.variance = calcVariance();
-        this.stddev = Math.sqrt(variance);
-    }
 
-    private double calcSum() {
+        // population size
+        count = timings.size();
+
+        // sum
         double _sum = 0d;
         for (double i : timings) {
             _sum += i;
         }
-        return _sum;
-    }
+        sum = _sum;
 
-    private double calcMean() {
-        return sum / ((double) timings.size());
-    }
+        // mean
+        mean = sum / ((double) timings.size());
 
-    private double calcVariance() {
-        double sum2 = 0d;
-        for (double i : timings) {
-            sum2 += (i - mean) * (i - mean);
+        // variance and stddev, only if more than one sample
+        if (count > 1) {
+            double _sum2 = 0d;
+            for (double i : timings) {
+                _sum2 += (i - mean) * (i - mean);
+            }
+            variance = _sum2 / ((double) (timings.size() - 1));
+            stddev = Math.sqrt(variance);
+        } else {
+            variance = 0d;
+            stddev = 0d;
         }
-        return sum2 / ((double) (timings.size() - 1));
     }
 
 }

@@ -44,7 +44,7 @@ public class ProgressWorker implements Callable<BenchResult> {
             double rawTime = mp.getSum();
             double rawTps = (double) totTrans / (rawTime / 1_000d / (double) conf.getConcurrency());
             double avgLatency = mp.getMean();
-            double stdDev = totTrans > 1 ? mp.getStddev() : 0d;
+            double stdDev = mp.getStddev();
             log.info("Partial results: {} tps, {} ms latency, {} stddev",
                     BigDecimal.valueOf(rawTps).setScale(3, RoundingMode.HALF_UP),
                     BigDecimal.valueOf(avgLatency).setScale(3, RoundingMode.HALF_UP),
