@@ -1,16 +1,17 @@
 # JSqlBench
 Simple Java program for running benchmarks on RDBMS.
 
-Inspired by [pg_bench](https://www.postgresql.org/docs/devel/static/pgbench.html), this software emulates a simple OLTP workload and measures TPS (transactions per second), average latency and standard deviation. Currently supported RDBMS are Oracle and PostgreSQL, but the _Strategy_ design pattern used makes it easy to cover other engines.
+Inspired by [pg_bench](https://www.postgresql.org/docs/current/pgbench.html), this software emulates a simple OLTP workload and measures TPS (transactions per second), average latency and standard deviation. Currently supported RDBMS are Oracle and PostgreSQL, but the _Strategy_ design pattern used makes it easy to cover other engines.
 
 #### Usage
 ```
 $ java -jar JSqlBench.jar --help
 Usage: JSqlBench [OPTIONS]
-      --engine=<engine>   Database engine. Currently supported: ORACLE, POSTGRES
+      --engine=<engine>   Database engine. Currently supported: Oracle and
+                            Postgres
       --host=<host>       Database server's hostname (default: localhost)
-      --port=<port>       Database server's port (default: 1521 for ORACLE and
-                            5432 for POSTGRES)
+      --port=<port>       Database server's port (default: 1521 for Oracle and
+                            5432 for Postgres)
       --dbname=<dbname>   Database or instance name (SID)
       --username=<username>
                           Username used to log in
@@ -34,5 +35,6 @@ Usage: JSqlBench [OPTIONS]
                             practice to make the run last at least a few
                             minutes. In some cases you could need hours to get
                             numbers that are reproducible (default: 300)
+      --read-only         Simulate a read only worlkoad
       --help              Print this help and exit
  ```
