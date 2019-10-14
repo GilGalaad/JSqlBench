@@ -21,6 +21,15 @@ public class MetricProvider {
     public MetricProvider(ArrayList<Double> timings) {
         this.timings = timings;
 
+        if (timings.isEmpty()) {
+            count = 0;
+            sum = 0d;
+            mean = 0;
+            variance = 0d;
+            stddev = 0d;
+            return;
+        }
+
         // population size
         count = timings.size();
 
