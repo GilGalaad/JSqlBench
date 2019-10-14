@@ -1,8 +1,9 @@
 package engine.strategy;
 
-import static engine.utils.CommonUtils.smartElapsed;
 import engine.dto.BenchConf;
 import static engine.strategy.DatabaseStrategy.tables;
+import static engine.utils.CommonUtils.smartElapsed;
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -16,7 +17,7 @@ public class OracleStrategy extends DatabaseStrategy {
     private static final String JDBC_URL_TEMPLATE = "jdbc:oracle:thin:@//%s:%d/%s";
 
     private static final String DROP_TABLE_STMT = "DROP TABLE %s%s CASCADE CONSTRAINTS PURGE";
-    private static final String ANALYZE_TABLE_STMT = "EXECUTE dbms_stats.gather_table_stats(ownname => %s, tabname => '%s', estimate_percent => dbms_stats.auto_sample_size, degree=> dbms_stats.auto_degree, granularity => 'ALL')";
+    private static final String ANALYZE_TABLE_STMT = "{CALL dbms_stats.gather_table_stats(ownname => ?, tabname => ?, estimate_percent => dbms_stats.auto_sample_size, degree=> dbms_stats.auto_degree, granularity => 'ALL')}";
 
     private static final String CREATE_BRANCHES_STMT = "CREATE TABLE %sbench_branches (bid NUMBER(38,0) NOT NULL, bbalance NUMBER(38,0)) %s %s";
     private static final String CREATE_TELLERS_STMT = "CREATE TABLE %sbench_tellers (tid NUMBER(38,0) NOT NULL, bid NUMBER(38,0) NOT NULL, tbalance NUMBER(38,0)) %s %s";
@@ -94,9 +95,10 @@ public class OracleStrategy extends DatabaseStrategy {
         c.setAutoCommit(true);
         long startTime = System.nanoTime();
         for (String table : tables) {
-            String sql = String.format(ANALYZE_TABLE_STMT, conf.getSchema() == null ? "user" : "'" + conf.getSchema().toUpperCase() + "'", table.toUpperCase());
-            try (Statement stmt = c.createStatement()) {
-                stmt.execute(sql);
+            try (CallableStatement stmt = c.prepareCall(ANALYZE_TABLE_STMT)) {
+                stmt.setString(1, conf.getSchema() == null ? conf.getUsername().toUpperCase() : conf.getSchema().toUpperCase());
+                stmt.setString(2, table.toUpperCase());
+                stmt.execute();
             }
         }
         long endTime = System.nanoTime();
