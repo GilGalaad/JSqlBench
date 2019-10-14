@@ -101,14 +101,14 @@ public class BenchEngine {
                 }
             }
 
-            // calculating metrics
-            MetricProvider mp = new MetricProvider(timings);
-
-            int totTrans = mp.getCount();
-            if (totTrans == 0) {
+            if (timings.isEmpty()) {
                 log.info("No transaction processed, no result to show");
                 return;
             }
+
+            // calculating metrics
+            MetricProvider mp = new MetricProvider(timings);
+            int totTrans = mp.getCount();
             log.info("Total number of transactions processed: {}", totTrans);
             double rawTime = mp.getSum();
 
