@@ -13,7 +13,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <!-- dependencies -->
-        <log4j.version>2.12.1</log4j.version>
+        <log4j.version>2.13.2</log4j.version>
         <lombok.version>1.18.10</lombok.version>
         <picocli.version>4.0.4</picocli.version>
         <ojdbc8.version>12.2.0.1</ojdbc8.version>
