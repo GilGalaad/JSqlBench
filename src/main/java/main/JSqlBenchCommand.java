@@ -12,8 +12,8 @@ import picocli.CommandLine.Option;
 
 @Log4j2
 @Command(name = "JSqlBench",
-        sortOptions = false, abbreviateSynopsis = true,
-        usageHelpAutoWidth = true)
+        sortOptions = false,
+        abbreviateSynopsis = true)
 public class JSqlBenchCommand implements Callable<Integer> {
 
     @Option(names = "--engine", required = true, description = "Database engine. Currently supported: Oracle and Postgres")
