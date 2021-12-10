@@ -1,11 +1,10 @@
 package engine.utils;
 
-import java.util.ArrayList;
 import lombok.Getter;
 
-public class MetricProvider {
+import java.util.ArrayList;
 
-    private final ArrayList<Double> timings;
+public class MetricProvider {
 
     @Getter
     private final int count;
@@ -19,8 +18,6 @@ public class MetricProvider {
     private final double stddev;
 
     public MetricProvider(ArrayList<Double> timings) {
-        this.timings = timings;
-
         if (timings.isEmpty()) {
             count = 0;
             sum = 0d;

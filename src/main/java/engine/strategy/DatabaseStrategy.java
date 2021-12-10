@@ -1,20 +1,18 @@
 package engine.strategy;
 
 import engine.dto.BenchConf;
-import static engine.utils.CommonUtils.smartElapsed;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import lombok.extern.log4j.Log4j2;
+
+import java.sql.*;
 import java.util.Arrays;
 import java.util.List;
-import lombok.extern.log4j.Log4j2;
+
+import static engine.utils.CommonUtils.smartElapsed;
 
 @Log4j2
 public abstract class DatabaseStrategy {
 
-    protected static final List<String> tables = Arrays.asList(new String[]{"bench_branches", "bench_tellers", "bench_accounts", "bench_history"});
+    protected static final List<String> tables = Arrays.asList("bench_branches", "bench_tellers", "bench_accounts", "bench_history");
 
     protected static final String INSERT_BRANCHES_STMT = "INSERT INTO %sbench_branches VALUES (?, ?)";
     protected static final String INSERT_TELLERS_STMT = "INSERT INTO %sbench_tellers VALUES (?, ?, ?)";
@@ -63,7 +61,7 @@ public abstract class DatabaseStrategy {
         try (PreparedStatement stmt = c.prepareStatement(sql)) {
             for (int i = 0; i < conf.getScale(); i++) {
                 for (int j = 0; j < 10; j++) {
-                    stmt.setLong(1, i * 10 + j + 1);
+                    stmt.setLong(1, i * 10L + j + 1);
                     stmt.setLong(2, i + 1);
                     stmt.setLong(3, 0);
                     stmt.addBatch();
@@ -76,7 +74,7 @@ public abstract class DatabaseStrategy {
         try (PreparedStatement stmt = c.prepareStatement(sql)) {
             for (int i = 0; i < conf.getScale(); i++) {
                 for (int j = 0; j < 100000; j++) {
-                    stmt.setLong(1, i * 100000 + j + 1);
+                    stmt.setLong(1, i * 100000L + j + 1);
                     stmt.setLong(2, i + 1);
                     stmt.setLong(3, 0);
                     stmt.addBatch();
@@ -123,7 +121,7 @@ public abstract class DatabaseStrategy {
             stmt.setLong(1, aid);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    //rs.getLong(1);
+                    rs.getLong(1);
                 }
             }
         }
@@ -152,7 +150,7 @@ public abstract class DatabaseStrategy {
             stmt.setLong(1, bid);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    //rs.getLong(1);
+                    rs.getLong(1);
                 }
             }
         }
@@ -160,7 +158,7 @@ public abstract class DatabaseStrategy {
             stmt.setLong(1, tid);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    //rs.getLong(1);
+                    rs.getLong(1);
                 }
             }
         }
@@ -168,7 +166,7 @@ public abstract class DatabaseStrategy {
             stmt.setLong(1, aid);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    //rs.getLong(1);
+                    rs.getLong(1);
                 }
             }
         }

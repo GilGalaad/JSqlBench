@@ -1,7 +1,8 @@
 package engine.strategy;
 
-import static engine.utils.CommonUtils.smartElapsed;
 import engine.dto.BenchConf;
+import lombok.extern.log4j.Log4j2;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -9,7 +10,8 @@ import java.sql.Statement;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import lombok.extern.log4j.Log4j2;
+
+import static engine.utils.CommonUtils.smartElapsed;
 
 @Log4j2
 public class PostgresStrategy extends DatabaseStrategy {

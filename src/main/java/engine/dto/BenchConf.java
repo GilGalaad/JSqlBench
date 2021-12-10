@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class BenchConf {
 
-    public static enum DbEngine {
+    public enum DbEngine {
         ORACLE,
         POSTGRES
     }

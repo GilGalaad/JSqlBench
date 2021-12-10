@@ -1,15 +1,12 @@
 package engine.strategy;
 
 import engine.dto.BenchConf;
-import static engine.strategy.DatabaseStrategy.tables;
-import static engine.utils.CommonUtils.smartElapsed;
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.Properties;
 import lombok.extern.log4j.Log4j2;
+
+import java.sql.*;
+import java.util.Properties;
+
+import static engine.utils.CommonUtils.smartElapsed;
 
 @Log4j2
 public class OracleStrategy extends DatabaseStrategy {

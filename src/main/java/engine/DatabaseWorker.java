@@ -2,15 +2,17 @@ package engine;
 
 import engine.dto.BenchConf;
 import engine.dto.BenchResult;
-import static engine.dto.BenchResult.ExecStatus.KO;
-import static engine.dto.BenchResult.ExecStatus.OK;
 import engine.strategy.DatabaseStrategy;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ThreadLocalRandom;
+
+import static engine.dto.BenchResult.ExecStatus.KO;
+import static engine.dto.BenchResult.ExecStatus.OK;
 
 public class DatabaseWorker implements Callable<BenchResult> {
 
@@ -37,8 +39,8 @@ public class DatabaseWorker implements Callable<BenchResult> {
             while (new Date().getTime() < deadline) {
                 // randomizing ids
                 long bid = ThreadLocalRandom.current().nextLong(1, conf.getScale() + 1);
-                long tid = ThreadLocalRandom.current().nextLong(1, conf.getScale() * 10 + 1);
-                long aid = ThreadLocalRandom.current().nextLong(1, conf.getScale() * 100000 + 1);
+                long tid = ThreadLocalRandom.current().nextLong(1, conf.getScale() * 10L + 1);
+                long aid = ThreadLocalRandom.current().nextLong(1, conf.getScale() * 100000L + 1);
                 int delta = ThreadLocalRandom.current().nextInt(-5000, 5001);
                 long startTime = System.nanoTime();
                 if (conf.isReadOnly()) {

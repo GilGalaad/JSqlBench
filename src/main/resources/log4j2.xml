@@ -2,18 +2,18 @@
 <configuration status="WARN">
     <appenders>
         <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="%msg%n" />
+            <PatternLayout pattern="%msg%n"/>
         </Console>
         <Console name="ConsoleNoNewline" target="SYSTEM_OUT">
-            <PatternLayout pattern="%msg" />
+            <PatternLayout pattern="%msg"/>
         </Console>
     </appenders>
     <loggers>
         <root level="ALL">
-            <appender-ref ref="Console" />
+            <appender-ref ref="Console"/>
         </root>
         <Logger name="engine.strategy" level="ALL" additivity="false">
-            <AppenderRef ref="ConsoleNoNewline" />
+            <AppenderRef ref="ConsoleNoNewline"/>
         </Logger>
     </loggers>
 </configuration>

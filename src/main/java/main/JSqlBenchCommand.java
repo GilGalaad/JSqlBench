@@ -3,12 +3,14 @@ package main;
 import engine.BenchEngine;
 import engine.dto.BenchConf;
 import engine.dto.BenchConf.DbEngine;
-import static engine.dto.BenchConf.DbEngine.ORACLE;
-import static engine.dto.BenchConf.DbEngine.POSTGRES;
-import java.util.concurrent.Callable;
 import lombok.extern.log4j.Log4j2;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
+
+import java.util.concurrent.Callable;
+
+import static engine.dto.BenchConf.DbEngine.ORACLE;
+import static engine.dto.BenchConf.DbEngine.POSTGRES;
 
 @Log4j2
 @Command(name = "JSqlBench",
@@ -45,8 +47,8 @@ public class JSqlBenchCommand implements Callable<Integer> {
 
     @Option(names = "--scale", required = false, defaultValue = "1",
             description = "Initialization scale factor, 1 = 100.000 rows. "
-            + "The initialization scale factor should be at least as large as the largest number of clients you intend to test, "
-            + "else you'll mostly be measuring update contention (default: ${DEFAULT-VALUE})")
+                    + "The initialization scale factor should be at least as large as the largest number of clients you intend to test, "
+                    + "else you'll mostly be measuring update contention (default: ${DEFAULT-VALUE})")
     private int scale;
 
     @Option(names = "--concurrency", required = false, defaultValue = "1", description = "Number of concurrent clients simulated (default: ${DEFAULT-VALUE})")
@@ -54,8 +56,8 @@ public class JSqlBenchCommand implements Callable<Integer> {
 
     @Option(names = "--time", required = false, defaultValue = "300",
             description = "Run the test for this many seconds. Never believe any test that runs for only a few seconds, "
-            + "it is a good practice to make the run last at least a few minutes. "
-            + "In some cases you could need hours to get numbers that are reproducible (default: ${DEFAULT-VALUE})")
+                    + "it is a good practice to make the run last at least a few minutes. "
+                    + "In some cases you could need hours to get numbers that are reproducible (default: ${DEFAULT-VALUE})")
     private Integer time;
 
     @Option(names = "--read-only", required = false, defaultValue = "false", description = "Simulate a read only worlkoad")

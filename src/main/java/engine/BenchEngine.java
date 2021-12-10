@@ -1,15 +1,13 @@
 package engine;
 
 import engine.dto.BenchConf;
-import static engine.dto.BenchConf.DbEngine.ORACLE;
-import static engine.dto.BenchConf.DbEngine.POSTGRES;
 import engine.dto.BenchResult;
-import static engine.dto.BenchResult.ExecStatus.KO;
 import engine.strategy.DatabaseStrategy;
 import engine.strategy.OracleStrategy;
 import engine.strategy.PostgresStrategy;
-import static engine.utils.CommonUtils.smartElapsed;
 import engine.utils.MetricProvider;
+import lombok.extern.log4j.Log4j2;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.Connection;
@@ -17,12 +15,12 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import lombok.extern.log4j.Log4j2;
+import java.util.concurrent.*;
+
+import static engine.dto.BenchConf.DbEngine.ORACLE;
+import static engine.dto.BenchConf.DbEngine.POSTGRES;
+import static engine.dto.BenchResult.ExecStatus.KO;
+import static engine.utils.CommonUtils.smartElapsed;
 
 @Log4j2
 public class BenchEngine {
@@ -63,7 +61,7 @@ public class BenchEngine {
             log.info("Starting {} concurrent threads...", conf.getConcurrency());
             ExecutorService tPool = Executors.newFixedThreadPool(conf.getConcurrency() + 1);
             ArrayList<Callable<BenchResult>> tList = new ArrayList<>(conf.getConcurrency() + 1);
-            List<Future<BenchResult>> tRes = null;
+            List<Future<BenchResult>> tRes;
             // calculate execution deadline
             Calendar cal = Calendar.getInstance();
             cal.setLenient(false);
@@ -130,7 +128,7 @@ public class BenchEngine {
     }
 
     private void waitAll(List<Future<BenchResult>> tRes) {
-        for (Future f : tRes) {
+        for (Future<BenchResult> f : tRes) {
             try {
                 f.get();
             } catch (InterruptedException | ExecutionException ex) {
