@@ -58,7 +58,6 @@ public class BenchEngine {
             Thread.sleep(5000);
 
             // preparing threads
-            log.info("Starting {} concurrent threads...", conf.getConcurrency());
             ExecutorService tPool = Executors.newFixedThreadPool(conf.getConcurrency() + 1);
             ArrayList<Callable<BenchResult>> tList = new ArrayList<>(conf.getConcurrency() + 1);
             List<Future<BenchResult>> tRes;
@@ -74,6 +73,7 @@ public class BenchEngine {
 
             // launching threads
             log.info("*** STARTING BENCHMARK ***");
+            log.info("Starting {} concurrent threads...", conf.getConcurrency());
             long startTime = System.nanoTime();
             tRes = tPool.invokeAll(tList);
             tPool.shutdown();
