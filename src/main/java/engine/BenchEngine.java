@@ -55,8 +55,8 @@ public class BenchEngine {
 
         try {
             // let settle down a bit
-            log.info("Settling down for 5 seconds...");
             Thread.sleep(5000);
+
             // preparing threads
             log.info("Starting {} concurrent threads...", conf.getConcurrency());
             ExecutorService tPool = Executors.newFixedThreadPool(conf.getConcurrency() + 1);
@@ -71,7 +71,9 @@ public class BenchEngine {
                 tList.add(new DatabaseWorker(conf, str, deadline, timings, lock));
             }
             tList.add(new ProgressWorker(conf, deadline, timings, lock));
+
             // launching threads
+            log.info("*** STARTING BENCHMARK ***");
             long startTime = System.nanoTime();
             tRes = tPool.invokeAll(tList);
             tPool.shutdown();
