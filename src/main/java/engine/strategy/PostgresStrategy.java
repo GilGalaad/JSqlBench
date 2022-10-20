@@ -102,6 +102,18 @@ public class PostgresStrategy extends DatabaseStrategy {
         long endTime = System.nanoTime();
         c.setAutoCommit(false);
         log.info("done! ({})\n", smartElapsed(endTime - startTime));
+
+        log.info("Starting checkpoint...");
+        c.setAutoCommit(true);
+        startTime = System.nanoTime();
+        try (Statement stmt = c.createStatement()) {
+            stmt.execute("CHECKPOINT");
+            endTime = System.nanoTime();
+            log.info("done! ({})\n", smartElapsed(endTime - startTime));
+        } catch (SQLException ex) {
+            log.info("failed (not superuser?)");
+        }
+        c.setAutoCommit(false);
     }
 
     @Override
