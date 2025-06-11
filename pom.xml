@@ -18,7 +18,7 @@
         <lombok.version>1.18.34</lombok.version>
         <picocli.version>4.7.6</picocli.version>
         <oracle.version>23.5.0.24.07</oracle.version>
-        <postgresql.version>42.7.4</postgresql.version>
+        <postgresql.version>42.7.7</postgresql.version>
     </properties>
 
     <dependencies>
