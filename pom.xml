@@ -12,13 +12,13 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>21</maven.compiler.release>
         <maven.version.ignore>(?i).*(-|\.)(alpha|beta|m|rc|cr)(-?\d+)?</maven.version.ignore>
-        <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
+        <maven-compiler-plugin.version>3.14.1</maven-compiler-plugin.version>
         <maven-assembly-plugin.version>3.7.1</maven-assembly-plugin.version>
-        <log4j.version>2.24.0</log4j.version>
-        <lombok.version>1.18.34</lombok.version>
-        <picocli.version>4.7.6</picocli.version>
-        <oracle.version>23.5.0.24.07</oracle.version>
-        <postgresql.version>42.7.7</postgresql.version>
+        <log4j.version>2.25.2</log4j.version>
+        <lombok.version>1.18.42</lombok.version>
+        <picocli.version>4.7.7</picocli.version>
+        <postgresql.version>42.7.8</postgresql.version>
+        <oracle.version>23.9.0.25.07</oracle.version>
     </properties>
 
     <dependencies>
@@ -43,14 +43,14 @@
         </dependency>
         <!-- JDBC -->
         <dependency>
-            <groupId>com.oracle.database.jdbc</groupId>
-            <artifactId>ojdbc11</artifactId>
-            <version>${oracle.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>${postgresql.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.database.jdbc</groupId>
+            <artifactId>ojdbc11</artifactId>
+            <version>${oracle.version}</version>
         </dependency>
     </dependencies>
 
