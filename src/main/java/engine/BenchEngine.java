@@ -104,18 +104,18 @@ public class BenchEngine {
 
             // calculating metrics
             MetricProvider mp = new MetricProvider(timings);
-            int totTrans = mp.getCount();
-            log.info("Total number of transactions processed: {}", totTrans);
-            double rawTime = mp.getSum();
+            int totalTransactions = mp.getCount();
+            log.info("Total number of transactions processed: {}", totalTransactions);
+            double totalTransactionTimeMs = mp.getSum();
 
-            double totTps = (double) totTrans / elapsedSec;
-            log.info("Transactions per second: {} (including connection and client overhead)", BigDecimal.valueOf(totTps).setScale(3, RoundingMode.HALF_UP));
+            double overallTps = (double) totalTransactions / elapsedSec;
+            log.info("Transactions per second: {} (overall)", BigDecimal.valueOf(overallTps).setScale(3, RoundingMode.HALF_UP));
 
-            double rawTps = (double) totTrans / (rawTime / 1_000d / (double) conf.getConcurrency());
-            log.info("Transactions per second: {} (excluding connection and client overhead)", BigDecimal.valueOf(rawTps).setScale(3, RoundingMode.HALF_UP));
+            double latencyDerivedTps = (double) totalTransactions / (totalTransactionTimeMs / 1_000d / (double) conf.getConcurrency());
+            log.info("Transactions per second: {} (derived from client-observed transaction latency)", BigDecimal.valueOf(latencyDerivedTps).setScale(3, RoundingMode.HALF_UP));
 
-            double avgLatency = mp.getMean();
-            log.info("Average latency: {} ms", BigDecimal.valueOf(avgLatency).setScale(3, RoundingMode.HALF_UP));
+            double averageLatency = mp.getMean();
+            log.info("Average latency: {} ms", BigDecimal.valueOf(averageLatency).setScale(3, RoundingMode.HALF_UP));
 
             double stdDev = mp.getStddev();
             log.info("Latency stddev: {}  ms", BigDecimal.valueOf(stdDev).setScale(3, RoundingMode.HALF_UP));

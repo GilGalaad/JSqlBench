@@ -42,14 +42,14 @@ public class ProgressWorker implements Callable<BenchResult> {
             synchronized (lock) {
                 mp = new MetricProvider(timings);
             }
-            int totTrans = mp.getCount();
-            double rawTime = mp.getSum();
-            double rawTps = (double) totTrans / (rawTime / 1_000d / (double) conf.getConcurrency());
-            double avgLatency = mp.getMean();
+            int totalTransactions = mp.getCount();
+            double totalTransactionTimeMs = mp.getSum();
+            double latencyDerivedTps = (double) totalTransactions / (totalTransactionTimeMs / 1_000d / (double) conf.getConcurrency());
+            double averageLatency = mp.getMean();
             double stdDev = mp.getStddev();
-            log.info("Partial results: {} tps, {} ms latency, {} stddev",
-                    BigDecimal.valueOf(rawTps).setScale(3, RoundingMode.HALF_UP),
-                    BigDecimal.valueOf(avgLatency).setScale(3, RoundingMode.HALF_UP),
+            log.info("Partial results: {} tps (derived from client-observed transaction latency), {} ms latency, {} stddev",
+                    BigDecimal.valueOf(latencyDerivedTps).setScale(3, RoundingMode.HALF_UP),
+                    BigDecimal.valueOf(averageLatency).setScale(3, RoundingMode.HALF_UP),
                     BigDecimal.valueOf(stdDev).setScale(3, RoundingMode.HALF_UP));
         }
         return ret;

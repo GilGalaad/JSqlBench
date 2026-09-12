@@ -3,6 +3,14 @@ Simple Java program for running benchmarks on RDBMS.
 
 Inspired by [pg_bench](https://www.postgresql.org/docs/current/pgbench.html), this software emulates a simple OLTP workload and measures TPS (transactions per second), average latency and standard deviation. Currently supported RDBMS are Oracle and PostgreSQL, but the _Strategy_ design pattern used makes it easy to cover other engines.
 
+#### Metrics
+JSqlBench reports two transaction rates:
+
+- **Overall TPS**: completed transactions divided by the total benchmark elapsed time. It includes connection establishment and client-side work performed outside individual transactions.
+- **Latency-derived TPS**: configured concurrency divided by the average client-observed transaction latency. Transaction latency includes JDBC processing, network communication, database execution and commit time. It excludes connection establishment, workload input generation and statistics bookkeeping.
+
+Latency-derived TPS assumes that all configured clients are continuously executing transactions. It represents the throughput implied by the measured transaction latency rather than the throughput observed over the complete benchmark run.
+
 #### Usage
 ```
 $ java -jar JSqlBench.jar --help
