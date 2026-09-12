@@ -44,7 +44,7 @@ public class OracleStrategy extends DatabaseStrategy {
         log.info("Dropping tables...");
         c.setAutoCommit(true);
         long startTime = System.nanoTime();
-        for (String table : tables) {
+        for (String table : TABLES) {
             String sql = String.format(DROP_TABLE_STMT, getSchemaPrefix(), table);
             try (Statement stmt = c.createStatement()) {
                 stmt.execute(sql);
@@ -91,7 +91,7 @@ public class OracleStrategy extends DatabaseStrategy {
         log.info("Analyzing...");
         c.setAutoCommit(true);
         long startTime = System.nanoTime();
-        for (String table : tables) {
+        for (String table : TABLES) {
             try (CallableStatement stmt = c.prepareCall(ANALYZE_TABLE_STMT)) {
                 stmt.setString(1, conf.schema() == null ? conf.username().toUpperCase() : conf.schema().toUpperCase());
                 stmt.setString(2, table.toUpperCase());

@@ -25,7 +25,7 @@ public class DatabaseWorker implements Callable<WorkerResult> {
     private final WorkerContext context;
 
     @Override
-    public WorkerResult call() throws Exception {
+    public WorkerResult call() {
         // connecting to database
         try (Connection c = str.doConnect()) {
             // entering loop

@@ -51,7 +51,7 @@ public class PostgresStrategy extends DatabaseStrategy {
         log.info("Dropping tables...");
         c.setAutoCommit(true);
         long startTime = System.nanoTime();
-        for (String table : tables) {
+        for (String table : TABLES) {
             String sql = String.format(DROP_TABLE_STMT, getSchemaPrefix(), table);
             try (Statement stmt = c.createStatement()) {
                 stmt.execute(sql);
@@ -93,7 +93,7 @@ public class PostgresStrategy extends DatabaseStrategy {
         log.info("Analyzing...");
         c.setAutoCommit(true);
         long startTime = System.nanoTime();
-        for (String table : tables) {
+        for (String table : TABLES) {
             String sql = String.format(ANALYZE_TABLE_STMT, getSchemaPrefix(), table);
             try (Statement stmt = c.createStatement()) {
                 stmt.execute(sql);

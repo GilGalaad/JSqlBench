@@ -4,7 +4,6 @@ import engine.dto.BenchConf;
 import lombok.extern.log4j.Log4j2;
 
 import java.sql.*;
-import java.util.Arrays;
 import java.util.List;
 
 import static engine.utils.CommonUtils.smartElapsed;
@@ -12,7 +11,7 @@ import static engine.utils.CommonUtils.smartElapsed;
 @Log4j2
 public abstract class DatabaseStrategy {
 
-    protected static final List<String> tables = Arrays.asList("bench_branches", "bench_tellers", "bench_accounts", "bench_history");
+    protected static final List<String> TABLES = List.of("bench_branches", "bench_tellers", "bench_accounts", "bench_history");
 
     protected static final String INSERT_BRANCHES_STMT = "INSERT INTO %sbench_branches VALUES (?, ?)";
     protected static final String INSERT_TELLERS_STMT = "INSERT INTO %sbench_tellers VALUES (?, ?, ?)";

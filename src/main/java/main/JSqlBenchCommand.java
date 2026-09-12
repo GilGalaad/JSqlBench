@@ -114,7 +114,7 @@ public class JSqlBenchCommand implements Callable<Integer> {
     }
 
     @Override
-    public Integer call() throws Exception {
+    public Integer call() {
         int selectedPort = Objects.requireNonNullElseGet(port, () -> switch (engine) {
             case ORACLE -> 1521;
             case POSTGRES -> 5432;

@@ -1,18 +1,19 @@
 package engine;
 
 import engine.dto.BenchConf;
+import engine.dto.LatencyMetrics;
 import engine.dto.WorkerContext;
 import engine.dto.WorkerResult;
 import engine.strategy.DatabaseStrategy;
 import engine.strategy.OracleStrategy;
 import engine.strategy.PostgresStrategy;
-import engine.dto.LatencyMetrics;
 import lombok.extern.log4j.Log4j2;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
@@ -22,6 +23,8 @@ import static engine.utils.CommonUtils.smartElapsed;
 
 @Log4j2
 public class BenchEngine {
+
+    private static final Duration SETTLE_TIME = Duration.ofSeconds(5);
 
     private final BenchConf conf;
     private final DatabaseStrategy str;
@@ -48,14 +51,13 @@ public class BenchEngine {
             }
 
             // let settle down a bit
-            Thread.sleep(5000);
+            Thread.sleep(SETTLE_TIME);
 
             // preparing threads
-            ExecutorService tPool = Executors.newFixedThreadPool(conf.concurrency() + 1);
             ArrayList<Callable<WorkerResult>> callables = new ArrayList<>(conf.concurrency() + 1);
             List<Future<WorkerResult>> results;
             ArrayList<WorkerContext> workerContexts = new ArrayList<>(conf.concurrency());
-            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(conf.time());
+            long deadline = System.nanoTime() + Duration.ofSeconds(conf.time()).toNanos();
             for (int i = 0; i < conf.concurrency(); i++) {
                 WorkerContext workerContext = new WorkerContext(i);
                 workerContexts.add(workerContext);
@@ -67,8 +69,9 @@ public class BenchEngine {
             log.info("*** STARTING BENCHMARK ***");
             log.info("Starting {} concurrent threads...", conf.concurrency());
             long startTime = System.nanoTime();
-            results = tPool.invokeAll(callables);
-            tPool.shutdown();
+            try (ExecutorService tPool = Executors.newFixedThreadPool(conf.concurrency() + 1)) {
+                results = tPool.invokeAll(callables);
+            }
             long endTime = System.nanoTime();
 
             try {
@@ -95,7 +98,7 @@ public class BenchEngine {
                 }
             }
 
-            WorkerResult progressResult = results.get(workerContexts.size()).get();
+            WorkerResult progressResult = results.getLast().get();
             if (progressResult.status() == KO) {
                 log.error("Progress worker reported exception: {}", progressResult.exception().getMessage());
                 workerFailed = true;

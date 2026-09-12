@@ -1,24 +1,24 @@
 package engine;
 
 import engine.dto.BenchConf;
+import engine.dto.LatencyMetrics;
 import engine.dto.WorkerContext;
 import engine.dto.WorkerResult;
-import engine.dto.LatencyMetrics;
 import lombok.extern.log4j.Log4j2;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 
 import static engine.dto.WorkerStatus.OK;
 
 @Log4j2
 public class ProgressWorker implements Callable<WorkerResult> {
 
-    private static final int INTERVAL_SEC = 60;
+    private static final Duration INTERVAL = Duration.ofMinutes(1);
 
     private final BenchConf conf;
     private final long deadline;
@@ -37,10 +37,10 @@ public class ProgressWorker implements Callable<WorkerResult> {
     }
 
     @Override
-    public WorkerResult call() throws Exception {
+    public WorkerResult call() throws InterruptedException {
         // entering loop
-        while (deadline - System.nanoTime() > TimeUnit.SECONDS.toNanos(INTERVAL_SEC)) {
-            Thread.sleep(INTERVAL_SEC * 1000);
+        while (deadline - System.nanoTime() > INTERVAL.toNanos()) {
+            Thread.sleep(INTERVAL);
             // calculating partial stats
             copyNewSamples();
             LatencyMetrics metrics = LatencyMetrics.from(samples);
