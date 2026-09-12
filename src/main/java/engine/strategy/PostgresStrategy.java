@@ -35,11 +35,11 @@ public class PostgresStrategy extends DatabaseStrategy {
 
     @Override
     public Connection doConnect() throws SQLException {
-        String jdbcUrl = String.format(JDBC_URL_TEMPLATE, conf.getHost(), conf.getPort(), conf.getDbname());
+        String jdbcUrl = String.format(JDBC_URL_TEMPLATE, conf.host(), conf.port(), conf.dbname());
         Properties props = new Properties();
-        props.setProperty("user", conf.getUsername());
-        if (conf.getPassword() != null) {
-            props.setProperty("password", conf.getPassword());
+        props.setProperty("user", conf.username());
+        if (conf.password() != null) {
+            props.setProperty("password", conf.password());
         }
         Connection c = DriverManager.getConnection(jdbcUrl, props);
         c.setAutoCommit(false);
@@ -118,7 +118,7 @@ public class PostgresStrategy extends DatabaseStrategy {
 
     @Override
     public String getNologgingClause() {
-        return conf.isNologging() ? "UNLOGGED" : "";
+        return conf.nologging() ? "UNLOGGED" : "";
     }
 
 }

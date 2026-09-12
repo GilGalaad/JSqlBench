@@ -49,7 +49,7 @@ public abstract class DatabaseStrategy {
         long startTime = System.nanoTime();
         String sql = String.format(INSERT_BRANCHES_STMT, getSchemaPrefix());
         try (PreparedStatement stmt = c.prepareStatement(sql)) {
-            for (int i = 0; i < conf.getScale(); i++) {
+            for (int i = 0; i < conf.scale(); i++) {
                 stmt.setLong(1, i + 1);
                 stmt.setLong(2, 0);
                 stmt.addBatch();
@@ -59,7 +59,7 @@ public abstract class DatabaseStrategy {
         }
         sql = String.format(INSERT_TELLERS_STMT, getSchemaPrefix());
         try (PreparedStatement stmt = c.prepareStatement(sql)) {
-            for (int i = 0; i < conf.getScale(); i++) {
+            for (int i = 0; i < conf.scale(); i++) {
                 for (int j = 0; j < 10; j++) {
                     stmt.setLong(1, i * 10L + j + 1);
                     stmt.setLong(2, i + 1);
@@ -72,7 +72,7 @@ public abstract class DatabaseStrategy {
         }
         sql = String.format(INSERT_ACCOUNTS_STMT, getSchemaPrefix());
         try (PreparedStatement stmt = c.prepareStatement(sql)) {
-            for (int i = 0; i < conf.getScale(); i++) {
+            for (int i = 0; i < conf.scale(); i++) {
                 for (int j = 0; j < 100000; j++) {
                     stmt.setLong(1, i * 100000L + j + 1);
                     stmt.setLong(2, i + 1);
@@ -174,11 +174,11 @@ public abstract class DatabaseStrategy {
     }
 
     public String getSchemaPrefix() {
-        return conf.getSchema() != null ? conf.getSchema() + "." : "";
+        return conf.schema() != null ? conf.schema() + "." : "";
     }
 
     public String getTablespaceClause() {
-        return conf.getTablespace() != null ? " TABLESPACE " + conf.getTablespace() : "";
+        return conf.tablespace() != null ? " TABLESPACE " + conf.tablespace() : "";
     }
 
     public abstract String getNologgingClause();

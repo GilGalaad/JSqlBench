@@ -2,20 +2,19 @@ package main;
 
 import engine.BenchEngine;
 import engine.dto.BenchConf;
-import engine.dto.BenchConf.DbEngine;
+import engine.dto.DbEngine;
 import lombok.extern.log4j.Log4j2;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.ITypeConverter;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.TypeConversionException;
 
+import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.regex.Pattern;
 
 @Log4j2
-@Command(name = "JSqlBench",
-        sortOptions = false,
-        abbreviateSynopsis = true)
+@Command(name = "JSqlBench", sortOptions = false, abbreviateSynopsis = true)
 public class JSqlBenchCommand implements Callable<Integer> {
 
     @Option(names = "--engine", required = true, description = "Database engine. Currently supported: Oracle and Postgres")
@@ -116,27 +115,11 @@ public class JSqlBenchCommand implements Callable<Integer> {
 
     @Override
     public Integer call() throws Exception {
-        BenchConf conf = new BenchConf();
-        conf.setEngine(engine);
-        conf.setHost(host);
-        if (port != null) {
-            conf.setPort(port);
-        } else {
-            conf.setPort(switch (engine) {
-                case ORACLE -> 1521;
-                case POSTGRES -> 5432;
-            });
-        }
-        conf.setDbname(dbname);
-        conf.setUsername(username);
-        conf.setPassword(password);
-        conf.setSchema(schema);
-        conf.setTablespace(tablespace);
-        conf.setNologging(nologging);
-        conf.setScale(scale);
-        conf.setConcurrency(concurrency);
-        conf.setTime(time);
-        conf.setReadOnly(readOnly);
+        int selectedPort = Objects.requireNonNullElseGet(port, () -> switch (engine) {
+            case ORACLE -> 1521;
+            case POSTGRES -> 5432;
+        });
+        BenchConf conf = new BenchConf(engine, host, selectedPort, dbname, username, password, schema, tablespace, nologging, scale, concurrency, time, readOnly);
 
         try {
             BenchEngine eng = new BenchEngine(conf);

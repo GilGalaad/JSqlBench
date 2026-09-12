@@ -1,11 +1,12 @@
 package engine;
 
 import engine.dto.BenchConf;
-import engine.dto.BenchResult;
+import engine.dto.WorkerContext;
+import engine.dto.WorkerResult;
 import engine.strategy.DatabaseStrategy;
 import engine.strategy.OracleStrategy;
 import engine.strategy.PostgresStrategy;
-import engine.utils.MetricProvider;
+import engine.dto.LatencyMetrics;
 import lombok.extern.log4j.Log4j2;
 
 import java.math.BigDecimal;
@@ -16,9 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 
-import static engine.dto.BenchConf.DbEngine.ORACLE;
-import static engine.dto.BenchConf.DbEngine.POSTGRES;
-import static engine.dto.BenchResult.ExecStatus.KO;
+import static engine.dto.WorkerStatus.KO;
 import static engine.utils.CommonUtils.smartElapsed;
 
 @Log4j2
@@ -26,54 +25,50 @@ public class BenchEngine {
 
     private final BenchConf conf;
     private final DatabaseStrategy str;
-    private final ArrayList<Double> timings = new ArrayList<>();
-    private final Object lock = new Object();
 
     public BenchEngine(BenchConf conf) throws UnsupportedOperationException {
         this.conf = conf;
         try {
-            if (conf.getEngine() == ORACLE) {
-                str = new OracleStrategy(conf);
-            } else if (conf.getEngine() == POSTGRES) {
-                str = new PostgresStrategy(conf);
-            } else {
-                throw new AssertionError("Unreachable code branch");
-            }
+            str = switch (conf.engine()) {
+                case ORACLE -> new OracleStrategy(conf);
+                case POSTGRES -> new PostgresStrategy(conf);
+            };
         } catch (ClassNotFoundException ex) {
             throw new UnsupportedOperationException("Error while initializing engine, database driver not found");
         }
     }
 
     public void run() {
-        log.info("*** PREPARING FOR BENCHMARK ***");
         try {
-            prepareDatabase();
-        } catch (SQLException ex) {
-            throw new RuntimeException("Error while preparing database for benchmark: " + ex.getMessage(), ex);
-        }
+            log.info("*** PREPARING FOR BENCHMARK ***");
+            try {
+                prepareDatabase();
+            } catch (SQLException ex) {
+                throw new RuntimeException("Error while preparing database for benchmark: " + ex.getMessage(), ex);
+            }
 
-        try {
             // let settle down a bit
             Thread.sleep(5000);
 
             // preparing threads
-            ExecutorService tPool = Executors.newFixedThreadPool(conf.getConcurrency() + 1);
-            ArrayList<Callable<BenchResult>> tList = new ArrayList<>(conf.getConcurrency() + 1);
-            List<Future<BenchResult>> tRes;
-            // calculate execution deadline
-            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(conf.getTime());
-            for (int i = 0; i < conf.getConcurrency(); i++) {
-                tList.add(new DatabaseWorker(conf, str, deadline, timings, lock));
+            ExecutorService tPool = Executors.newFixedThreadPool(conf.concurrency() + 1);
+            ArrayList<Callable<WorkerResult>> callables = new ArrayList<>(conf.concurrency() + 1);
+            List<Future<WorkerResult>> results;
+            ArrayList<WorkerContext> workerContexts = new ArrayList<>(conf.concurrency());
+            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(conf.time());
+            for (int i = 0; i < conf.concurrency(); i++) {
+                WorkerContext workerContext = new WorkerContext(i);
+                workerContexts.add(workerContext);
+                callables.add(new DatabaseWorker(conf, str, deadline, workerContext));
             }
-            tList.add(new ProgressWorker(conf, deadline, timings, lock));
+            callables.add(new ProgressWorker(conf, deadline, workerContexts));
 
             // launching threads
             log.info("*** STARTING BENCHMARK ***");
-            log.info("Starting {} concurrent threads...", conf.getConcurrency());
+            log.info("Starting {} concurrent threads...", conf.concurrency());
             long startTime = System.nanoTime();
-            tRes = tPool.invokeAll(tList);
+            results = tPool.invokeAll(callables);
             tPool.shutdown();
-            waitAll(tRes);
             long endTime = System.nanoTime();
 
             try {
@@ -84,54 +79,62 @@ public class BenchEngine {
 
             // printing result
             log.info("*** BENCHMARK RESULT ***");
-            log.info("Scale factor: {}", conf.getScale());
-            log.info("Number of concurrent clients: {}", conf.getConcurrency());
+            log.info("Scale factor: {}", conf.scale());
+            log.info("Number of concurrent clients: {}", conf.concurrency());
 
             long elapsedNano = endTime - startTime;
             double elapsedSec = ((double) (endTime - startTime)) / 1_000_000_000d;
             log.info("Total time elapsed: {}", smartElapsed(elapsedNano));
 
-            for (Future<BenchResult> f : tRes) {
-                if (f.get().getStatus() == KO) {
-                    log.error("Thead reported exception: {}", f.get().getEx().getMessage());
+            boolean workerFailed = false;
+            for (int i = 0; i < workerContexts.size(); i++) {
+                WorkerResult result = results.get(i).get();
+                if (result.status() == KO) {
+                    log.error("Database worker {} reported exception: {}", workerContexts.get(i).workerId(), result.exception().getMessage());
+                    workerFailed = true;
                 }
             }
 
-            if (timings.isEmpty()) {
+            WorkerResult progressResult = results.get(workerContexts.size()).get();
+            if (progressResult.status() == KO) {
+                log.error("Progress worker reported exception: {}", progressResult.exception().getMessage());
+                workerFailed = true;
+            }
+            if (workerFailed) {
+                throw new RuntimeException("Benchmark failed because one or more workers reported an exception");
+            }
+
+            ArrayList<ArrayList<Long>> samples = new ArrayList<>(workerContexts.size());
+            for (WorkerContext workerContext : workerContexts) {
+                samples.add(workerContext.samples());
+            }
+            LatencyMetrics metrics = LatencyMetrics.from(samples);
+            if (metrics.count() == 0L) {
                 log.info("No transaction processed, no result to show");
                 return;
             }
 
             // calculating metrics
-            MetricProvider mp = new MetricProvider(timings);
-            int totalTransactions = mp.getCount();
+            long totalTransactions = metrics.count();
             log.info("Total number of transactions processed: {}", totalTransactions);
-            double totalTransactionTimeMs = mp.getSum();
+            long totalTransactionTimeNanos = metrics.sum();
 
             double overallTps = (double) totalTransactions / elapsedSec;
             log.info("Transactions per second: {} (overall)", BigDecimal.valueOf(overallTps).setScale(3, RoundingMode.HALF_UP));
 
-            double latencyDerivedTps = (double) totalTransactions / (totalTransactionTimeMs / 1_000d / (double) conf.getConcurrency());
+            double latencyDerivedTps = (double) totalTransactions / (totalTransactionTimeNanos / 1_000_000_000d / (double) conf.concurrency());
             log.info("Transactions per second: {} (derived from client-observed transaction latency)", BigDecimal.valueOf(latencyDerivedTps).setScale(3, RoundingMode.HALF_UP));
 
-            double averageLatency = mp.getMean();
+            double averageLatency = metrics.mean() / 1_000_000d;
             log.info("Average latency: {} ms", BigDecimal.valueOf(averageLatency).setScale(3, RoundingMode.HALF_UP));
 
-            double stdDev = mp.getStddev();
+            double stdDev = metrics.stddev() / 1_000_000d;
             log.info("Latency stddev: {}  ms", BigDecimal.valueOf(stdDev).setScale(3, RoundingMode.HALF_UP));
-        } catch (InterruptedException | ExecutionException ex) {
-            // should never happen
-            log.error("Unexpected {}: {}", ex.getClass().getSimpleName(), ex.getMessage());
-        }
-    }
-
-    private void waitAll(List<Future<BenchResult>> tRes) {
-        for (Future<BenchResult> f : tRes) {
-            try {
-                f.get();
-            } catch (InterruptedException | ExecutionException ex) {
-                // do nothing, will be handled later
-            }
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Benchmark interrupted", ex);
+        } catch (ExecutionException ex) {
+            throw new RuntimeException("Unexpected worker exception", ex.getCause());
         }
     }
 
