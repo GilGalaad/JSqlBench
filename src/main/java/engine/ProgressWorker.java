@@ -5,8 +5,6 @@ import engine.dto.LatencyMetrics;
 import engine.dto.WorkerResult;
 import lombok.extern.log4j.Log4j2;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +12,7 @@ import java.util.concurrent.Callable;
 
 import static engine.dto.WorkerStatus.KO;
 import static engine.dto.WorkerStatus.OK;
+import static engine.utils.CommonUtils.roundMetric;
 
 @Log4j2
 public class ProgressWorker implements Callable<WorkerResult> {
@@ -46,19 +45,14 @@ public class ProgressWorker implements Callable<WorkerResult> {
                 copyNewSamples();
                 LatencyMetrics metrics = LatencyMetrics.from(samples);
 
-                long totalTransactions = metrics.count();
-                if (totalTransactions == 0L) {
+                if (metrics.isEmpty()) {
                     log.info("Partial results: no transactions completed so far");
                     continue;
                 }
-                long totalTransactionTimeNanos = metrics.sum();
-                double latencyDerivedTps = (double) totalTransactions / (totalTransactionTimeNanos / 1_000_000_000d / (double) conf.concurrency());
-                double averageLatency = metrics.mean() / 1_000_000d;
-                double stdDev = metrics.stddev() / 1_000_000d;
-                log.info("Partial results: {} tps, {} ms latency, {} stddev",
-                        BigDecimal.valueOf(latencyDerivedTps).setScale(3, RoundingMode.HALF_UP),
-                        BigDecimal.valueOf(averageLatency).setScale(3, RoundingMode.HALF_UP),
-                        BigDecimal.valueOf(stdDev).setScale(3, RoundingMode.HALF_UP));
+                double latencyDerivedTps = metrics.latencyDerivedTps(conf.concurrency());
+                double averageLatency = metrics.averageLatencyMillis();
+                double stdDev = metrics.standardDeviationMillis();
+                log.info("Partial results: {} tps, {} ms latency, {} stddev", roundMetric(latencyDerivedTps), roundMetric(averageLatency), roundMetric(stdDev));
             }
         } catch (InterruptedException ex) {
             throw ex;

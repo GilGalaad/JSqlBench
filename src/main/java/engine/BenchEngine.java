@@ -8,8 +8,6 @@ import engine.strategy.OracleStrategy;
 import engine.strategy.PostgresStrategy;
 import lombok.extern.log4j.Log4j2;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Duration;
@@ -21,6 +19,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import static engine.dto.WorkerStatus.KO;
+import static engine.utils.CommonUtils.roundMetric;
 import static engine.utils.CommonUtils.smartElapsed;
 
 @Log4j2
@@ -88,7 +87,6 @@ public class BenchEngine {
             log.info("Number of concurrent clients: {}", conf.concurrency());
 
             long elapsedNano = endTime - startTime;
-            double elapsedSec = ((double) (endTime - startTime)) / 1_000_000_000d;
             log.info("Total time elapsed: {}", smartElapsed(elapsedNano));
 
             boolean workerFailed = false;
@@ -105,7 +103,7 @@ public class BenchEngine {
 
             List<List<Long>> samples = workerContexts.stream().map(WorkerContext::allSamples).toList();
             LatencyMetrics metrics = LatencyMetrics.from(samples);
-            if (metrics.count() == 0L) {
+            if (metrics.isEmpty()) {
                 log.info("No transaction processed, no result to show");
                 return;
             }
@@ -113,19 +111,18 @@ public class BenchEngine {
             // calculating metrics
             long totalTransactions = metrics.count();
             log.info("Total number of transactions processed: {}", totalTransactions);
-            long totalTransactionTimeNanos = metrics.sum();
 
-            double overallTps = (double) totalTransactions / elapsedSec;
-            log.info("Transactions per second: {} (overall)", BigDecimal.valueOf(overallTps).setScale(3, RoundingMode.HALF_UP));
+            double overallTps = metrics.overallTps(elapsedNano);
+            log.info("Transactions per second: {} (overall)", roundMetric(overallTps));
 
-            double latencyDerivedTps = (double) totalTransactions / (totalTransactionTimeNanos / 1_000_000_000d / (double) conf.concurrency());
-            log.info("Transactions per second: {} (derived from client-observed transaction latency)", BigDecimal.valueOf(latencyDerivedTps).setScale(3, RoundingMode.HALF_UP));
+            double latencyDerivedTps = metrics.latencyDerivedTps(conf.concurrency());
+            log.info("Transactions per second: {} (derived from client-observed transaction latency)", roundMetric(latencyDerivedTps));
 
-            double averageLatency = metrics.mean() / 1_000_000d;
-            log.info("Average latency: {} ms", BigDecimal.valueOf(averageLatency).setScale(3, RoundingMode.HALF_UP));
+            double averageLatency = metrics.averageLatencyMillis();
+            log.info("Average latency: {} ms", roundMetric(averageLatency));
 
-            double stdDev = metrics.stddev() / 1_000_000d;
-            log.info("Latency stddev: {}  ms", BigDecimal.valueOf(stdDev).setScale(3, RoundingMode.HALF_UP));
+            double stdDev = metrics.standardDeviationMillis();
+            log.info("Latency stddev: {}  ms", roundMetric(stdDev));
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Benchmark interrupted", ex);
