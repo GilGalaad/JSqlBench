@@ -22,8 +22,8 @@ public class CommonUtils {
         }
     }
 
-    public static BigDecimal roundMetric(double value) {
-        return BigDecimal.valueOf(value).setScale(3, RoundingMode.HALF_UP);
+    public static BigDecimal roundMetric(double value, int scale) {
+        return BigDecimal.valueOf(value).setScale(scale, RoundingMode.HALF_UP);
     }
 
 }

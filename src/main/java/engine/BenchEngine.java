@@ -114,22 +114,23 @@ public class BenchEngine {
             log.info("Total number of transactions processed: {}", totalTransactions);
 
             double overallTps = metrics.overallTps(elapsedNano);
-            log.info("Transactions per second: {} (overall)", roundMetric(overallTps));
+            log.info("Transactions per second: {} (overall)", roundMetric(overallTps, 1));
 
             double latencyDerivedTps = metrics.latencyDerivedTps(conf.concurrency());
-            log.info("Transactions per second: {} (derived from client-observed transaction latency)", roundMetric(latencyDerivedTps));
+            log.info("Transactions per second: {} (derived from client-observed transaction latency)", roundMetric(latencyDerivedTps, 1));
 
             double averageLatency = metrics.averageLatencyMillis();
-            log.info("Average latency: {} ms", roundMetric(averageLatency));
+            log.info("Average latency: {} ms", roundMetric(averageLatency, 3));
 
             double stdDev = metrics.standardDeviationMillis();
-            log.info("Latency stddev: {}  ms", roundMetric(stdDev));
+            log.info("Latency stddev: {}  ms", roundMetric(stdDev, 3));
 
             LatencyPercentiles percentiles = LatencyPercentiles.from(samples);
-            log.info("Latency percentiles: p50 {} ms, p95 {} ms, p99 {} ms", roundMetric(percentiles.p50Millis()), roundMetric(percentiles.p95Millis()), roundMetric(percentiles.p99Millis()));
+            log.info("Latency percentiles: p50 {} ms, p95 {} ms, p99 {} ms",
+                    roundMetric(percentiles.p50Millis(), 3), roundMetric(percentiles.p95Millis(), 3), roundMetric(percentiles.p99Millis(), 3));
 
             double coefficientOfVariation = metrics.coefficientOfVariationPercent();
-            log.info("Latency coefficient of variation: {}%", roundMetric(coefficientOfVariation));
+            log.info("Latency coefficient of variation: {}%", roundMetric(coefficientOfVariation, 1));
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Benchmark interrupted", ex);
