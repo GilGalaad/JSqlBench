@@ -2,7 +2,6 @@ package engine;
 
 import engine.dto.BenchConf;
 import engine.dto.LatencyMetrics;
-import engine.dto.WorkerContext;
 import engine.dto.WorkerResult;
 import engine.strategy.DatabaseStrategy;
 import engine.strategy.OracleStrategy;
@@ -16,7 +15,10 @@ import java.sql.SQLException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static engine.dto.WorkerStatus.KO;
 import static engine.utils.CommonUtils.smartElapsed;
@@ -59,7 +61,7 @@ public class BenchEngine {
             ArrayList<WorkerContext> workerContexts = new ArrayList<>(conf.concurrency());
             long deadline = System.nanoTime() + Duration.ofSeconds(conf.time()).toNanos();
             for (int i = 0; i < conf.concurrency(); i++) {
-                WorkerContext workerContext = new WorkerContext(i);
+                WorkerContext workerContext = new WorkerContext();
                 workerContexts.add(workerContext);
                 callables.add(new DatabaseWorker(conf, str, deadline, workerContext));
             }
@@ -69,8 +71,8 @@ public class BenchEngine {
             log.info("*** STARTING BENCHMARK ***");
             log.info("Starting {} concurrent threads...", conf.concurrency());
             long startTime = System.nanoTime();
-            try (ExecutorService tPool = Executors.newFixedThreadPool(conf.concurrency() + 1)) {
-                results = tPool.invokeAll(callables);
+            try (ExecutorService executor = Executors.newFixedThreadPool(conf.concurrency() + 1)) {
+                results = executor.invokeAll(callables);
             }
             long endTime = System.nanoTime();
 
@@ -90,27 +92,18 @@ public class BenchEngine {
             log.info("Total time elapsed: {}", smartElapsed(elapsedNano));
 
             boolean workerFailed = false;
-            for (int i = 0; i < workerContexts.size(); i++) {
-                WorkerResult result = results.get(i).get();
+            for (int i = 0; i < results.size(); i++) {
+                WorkerResult result = results.get(i).resultNow();
                 if (result.status() == KO) {
-                    log.error("Database worker {} reported exception: {}", workerContexts.get(i).workerId(), result.exception().getMessage());
+                    log.error("Worker #{} reported exception: {}", i + 1, result.exception().getMessage());
                     workerFailed = true;
                 }
-            }
-
-            WorkerResult progressResult = results.getLast().get();
-            if (progressResult.status() == KO) {
-                log.error("Progress worker reported exception: {}", progressResult.exception().getMessage());
-                workerFailed = true;
             }
             if (workerFailed) {
                 throw new RuntimeException("Benchmark failed because one or more workers reported an exception");
             }
 
-            ArrayList<ArrayList<Long>> samples = new ArrayList<>(workerContexts.size());
-            for (WorkerContext workerContext : workerContexts) {
-                samples.add(workerContext.samples());
-            }
+            List<List<Long>> samples = workerContexts.stream().map(WorkerContext::allSamples).toList();
             LatencyMetrics metrics = LatencyMetrics.from(samples);
             if (metrics.count() == 0L) {
                 log.info("No transaction processed, no result to show");
@@ -136,8 +129,6 @@ public class BenchEngine {
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Benchmark interrupted", ex);
-        } catch (ExecutionException ex) {
-            throw new RuntimeException("Unexpected worker exception", ex.getCause());
         }
     }
 

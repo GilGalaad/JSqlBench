@@ -2,7 +2,6 @@ package engine;
 
 import engine.dto.BenchConf;
 import engine.dto.LatencyMetrics;
-import engine.dto.WorkerContext;
 import engine.dto.WorkerResult;
 import lombok.extern.log4j.Log4j2;
 
@@ -13,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import static engine.dto.WorkerStatus.KO;
 import static engine.dto.WorkerStatus.OK;
 
 @Log4j2
@@ -38,25 +38,32 @@ public class ProgressWorker implements Callable<WorkerResult> {
 
     @Override
     public WorkerResult call() throws InterruptedException {
-        // entering loop
-        while (deadline - System.nanoTime() > INTERVAL.toNanos()) {
-            Thread.sleep(INTERVAL);
-            // calculating partial stats
-            copyNewSamples();
-            LatencyMetrics metrics = LatencyMetrics.from(samples);
-            long totalTransactions = metrics.count();
-            if (totalTransactions == 0L) {
-                log.info("Partial results: no transactions processed");
-                continue;
+        try {
+            // entering loop
+            while (deadline - System.nanoTime() > INTERVAL.toNanos()) {
+                Thread.sleep(INTERVAL);
+                // calculating partial stats
+                copyNewSamples();
+                LatencyMetrics metrics = LatencyMetrics.from(samples);
+
+                long totalTransactions = metrics.count();
+                if (totalTransactions == 0L) {
+                    log.info("Partial results: no transactions completed so far");
+                    continue;
+                }
+                long totalTransactionTimeNanos = metrics.sum();
+                double latencyDerivedTps = (double) totalTransactions / (totalTransactionTimeNanos / 1_000_000_000d / (double) conf.concurrency());
+                double averageLatency = metrics.mean() / 1_000_000d;
+                double stdDev = metrics.stddev() / 1_000_000d;
+                log.info("Partial results: {} tps, {} ms latency, {} stddev",
+                        BigDecimal.valueOf(latencyDerivedTps).setScale(3, RoundingMode.HALF_UP),
+                        BigDecimal.valueOf(averageLatency).setScale(3, RoundingMode.HALF_UP),
+                        BigDecimal.valueOf(stdDev).setScale(3, RoundingMode.HALF_UP));
             }
-            long totalTransactionTimeNanos = metrics.sum();
-            double latencyDerivedTps = (double) totalTransactions / (totalTransactionTimeNanos / 1_000_000_000d / (double) conf.concurrency());
-            double averageLatency = metrics.mean() / 1_000_000d;
-            double stdDev = metrics.stddev() / 1_000_000d;
-            log.info("Partial results: {} tps, {} ms latency, {} stddev",
-                    BigDecimal.valueOf(latencyDerivedTps).setScale(3, RoundingMode.HALF_UP),
-                    BigDecimal.valueOf(averageLatency).setScale(3, RoundingMode.HALF_UP),
-                    BigDecimal.valueOf(stdDev).setScale(3, RoundingMode.HALF_UP));
+        } catch (InterruptedException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            return new WorkerResult(KO, ex);
         }
         return new WorkerResult(OK, null);
     }

@@ -1,14 +1,12 @@
 package engine;
 
 import engine.dto.BenchConf;
-import engine.dto.WorkerContext;
 import engine.dto.WorkerResult;
 import engine.strategy.DatabaseStrategy;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -25,16 +23,22 @@ public class DatabaseWorker implements Callable<WorkerResult> {
     private final WorkerContext context;
 
     @Override
-    public WorkerResult call() {
+    public WorkerResult call() throws InterruptedException {
         // connecting to database
         try (Connection c = str.doConnect()) {
             // entering loop
             while (true) {
+                if (Thread.interrupted()) {
+                    throw new InterruptedException("Database worker interrupted");
+                }
+
                 // randomizing ids
                 long bid = ThreadLocalRandom.current().nextLong(1, conf.scale() + 1);
                 long tid = ThreadLocalRandom.current().nextLong(1, conf.scale() * 10L + 1);
                 long aid = ThreadLocalRandom.current().nextLong(1, conf.scale() * 100000L + 1);
                 int delta = ThreadLocalRandom.current().nextInt(-5000, 5001);
+
+                // running workload
                 long startTime = System.nanoTime();
                 if (startTime - deadline >= 0) {
                     break;
@@ -47,8 +51,9 @@ public class DatabaseWorker implements Callable<WorkerResult> {
                 long endTime = System.nanoTime();
                 context.addSample(endTime - startTime);
             }
-        } catch (SQLException | RuntimeException ex) {
-            // if something goes wrong, return anyway what done until now
+        } catch (InterruptedException ex) {
+            throw ex;
+        } catch (Exception ex) {
             return new WorkerResult(KO, ex);
         }
         return new WorkerResult(OK, null);
