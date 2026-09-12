@@ -2,6 +2,7 @@ package engine;
 
 import engine.dto.BenchConf;
 import engine.dto.LatencyMetrics;
+import engine.dto.LatencyPercentiles;
 import engine.dto.WorkerResult;
 import engine.strategy.DatabaseStrategy;
 import engine.strategy.OracleStrategy;
@@ -123,6 +124,12 @@ public class BenchEngine {
 
             double stdDev = metrics.standardDeviationMillis();
             log.info("Latency stddev: {}  ms", roundMetric(stdDev));
+
+            LatencyPercentiles percentiles = LatencyPercentiles.from(samples);
+            log.info("Latency percentiles: p50 {} ms, p95 {} ms, p99 {} ms", roundMetric(percentiles.p50Millis()), roundMetric(percentiles.p95Millis()), roundMetric(percentiles.p99Millis()));
+
+            double coefficientOfVariation = metrics.coefficientOfVariationPercent();
+            log.info("Latency coefficient of variation: {}%", roundMetric(coefficientOfVariation));
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Benchmark interrupted", ex);

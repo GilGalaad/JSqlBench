@@ -1,7 +1,7 @@
 # JSqlBench
 Simple Java program for running benchmarks on RDBMS.
 
-Inspired by [pg_bench](https://www.postgresql.org/docs/current/pgbench.html), this software emulates a simple OLTP workload and measures TPS (transactions per second), average latency and standard deviation. Currently supported RDBMS are Oracle and PostgreSQL, but the _Strategy_ design pattern used makes it easy to cover other engines.
+Inspired by [pg_bench](https://www.postgresql.org/docs/current/pgbench.html), this software emulates a simple OLTP workload and measures TPS (transactions per second), average latency, standard deviation, latency percentiles and coefficient of variation. Currently supported RDBMS are Oracle and PostgreSQL, but the _Strategy_ design pattern used makes it easy to cover other engines.
 
 #### Metrics
 JSqlBench reports two transaction rates:
@@ -10,6 +10,8 @@ JSqlBench reports two transaction rates:
 - **Latency-derived TPS**: configured concurrency divided by the average client-observed transaction latency. Transaction latency includes JDBC processing, network communication, database execution and commit time. It excludes connection establishment, workload input generation and statistics bookkeeping.
 
 Latency-derived TPS assumes that all configured clients are continuously executing transactions. It represents the throughput implied by the measured transaction latency rather than the throughput observed over the complete benchmark run.
+
+Final results also report the p50, p95 and p99 transaction latency using the nearest-rank method. The latency coefficient of variation is the standard deviation divided by the mean and is reported as a percentage; it describes latency variability relative to the average. Percentiles and coefficient of variation are calculated only after the benchmark and are not included in partial progress results.
 
 #### Usage
 ```

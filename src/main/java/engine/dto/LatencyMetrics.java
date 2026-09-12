@@ -12,28 +12,29 @@ public record LatencyMetrics(long count, long totalNanos, double meanNanos, doub
         LongSummaryStatistics statistics = samples.stream()
                 .flatMapToLong(workerSamples -> workerSamples.stream().mapToLong(Long::longValue))
                 .summaryStatistics();
+
         long count = statistics.getCount();
         long totalNanos = statistics.getSum();
-        double meanNanos = statistics.getAverage();
-        double varianceNanosSquared;
-        double standardDeviationNanos;
-
-        if (count > 1) {
-            double sumOfSquaredDeviations = samples.stream()
-                    .flatMapToLong(workerSamples -> workerSamples.stream().mapToLong(Long::longValue))
-                    .mapToDouble(sample -> (sample - meanNanos) * (sample - meanNanos))
-                    .sum();
-            varianceNanosSquared = sumOfSquaredDeviations / (double) (count - 1);
-            standardDeviationNanos = Math.sqrt(varianceNanosSquared);
-        } else {
-            varianceNanosSquared = 0d;
-            standardDeviationNanos = 0d;
+        if (count == 0) {
+            return new LatencyMetrics(count, totalNanos, Double.NaN, Double.NaN, Double.NaN);
         }
+
+        double meanNanos = statistics.getAverage();
+        if (count == 1) {
+            return new LatencyMetrics(count, totalNanos, meanNanos, 0d, 0d);
+        }
+
+        double sumOfSquaredDeviations = samples.stream()
+                .flatMapToLong(workerSamples -> workerSamples.stream().mapToLong(Long::longValue))
+                .mapToDouble(sample -> (sample - meanNanos) * (sample - meanNanos))
+                .sum();
+        double varianceNanosSquared = sumOfSquaredDeviations / (double) (count - 1);
+        double standardDeviationNanos = Math.sqrt(varianceNanosSquared);
         return new LatencyMetrics(count, totalNanos, meanNanos, varianceNanosSquared, standardDeviationNanos);
     }
 
     public boolean isEmpty() {
-        return count == 0L;
+        return count == 0;
     }
 
     public double overallTps(long elapsedNanos) {
@@ -50,6 +51,10 @@ public record LatencyMetrics(long count, long totalNanos, double meanNanos, doub
 
     public double standardDeviationMillis() {
         return standardDeviationNanos / NANOS_PER_MILLISECOND;
+    }
+
+    public double coefficientOfVariationPercent() {
+        return standardDeviationNanos / meanNanos * 100d;
     }
 
 }
