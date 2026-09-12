@@ -138,7 +138,7 @@ public abstract class DatabaseStrategy {
         try (PreparedStatement stmt = c.prepareStatement(String.format(INSERT_HISTORY_STMT, getSchemaPrefix()))) {
             stmt.setLong(1, tid);
             stmt.setLong(2, bid);
-            stmt.setLong(3, bid);
+            stmt.setLong(3, aid);
             stmt.setInt(4, delta);
             stmt.executeUpdate();
         }
@@ -170,6 +170,7 @@ public abstract class DatabaseStrategy {
                 }
             }
         }
+        c.commit();
     }
 
     public String getSchemaPrefix() {
