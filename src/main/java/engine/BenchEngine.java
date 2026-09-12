@@ -13,7 +13,6 @@ import java.math.RoundingMode;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -62,10 +61,7 @@ public class BenchEngine {
             ArrayList<Callable<BenchResult>> tList = new ArrayList<>(conf.getConcurrency() + 1);
             List<Future<BenchResult>> tRes;
             // calculate execution deadline
-            Calendar cal = Calendar.getInstance();
-            cal.setLenient(false);
-            cal.add(Calendar.SECOND, conf.getTime());
-            long deadline = cal.getTimeInMillis();
+            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(conf.getTime());
             for (int i = 0; i < conf.getConcurrency(); i++) {
                 tList.add(new DatabaseWorker(conf, str, deadline, timings, lock));
             }

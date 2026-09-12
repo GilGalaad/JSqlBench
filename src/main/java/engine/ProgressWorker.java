@@ -8,8 +8,8 @@ import lombok.extern.log4j.Log4j2;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
 import static engine.dto.BenchResult.ExecStatus.OK;
 
@@ -35,7 +35,7 @@ public class ProgressWorker implements Callable<BenchResult> {
         BenchResult ret = new BenchResult();
         ret.setStatus(OK);
         // entering loop
-        while (new Date().getTime() + (INTERVAL_SEC * 1000) < deadline) {
+        while (deadline - System.nanoTime() > TimeUnit.SECONDS.toNanos(INTERVAL_SEC)) {
             Thread.sleep(INTERVAL_SEC * 1000);
             // calculating partial stats
             MetricProvider mp;
